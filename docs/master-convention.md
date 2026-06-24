@@ -71,14 +71,28 @@ Do not introduce additional architectural layers.
 
 Use only:
 
-src
-├─ core
-├─ features
-├─ routes
+apps
+└─ desktop
+   ├─ ui
+   │  ├─ core
+   │  ├─ features
+   │  ├─ routes
+   │  ├─ shared
+   │  └─ styles
+   └─ native
+
+packages
 ├─ shared
-└─ styles
+├─ database
+└─ config
 
 All business logic must live inside feature modules.
+
+Do not place app source code in the repository root.
+
+Use apps/desktop/ui for React application code.
+
+Use apps/desktop/native for Rust native application code.
 
 ⸻
 
@@ -166,9 +180,19 @@ Use Tailwind CSS.
 
 Use shadcn/ui components when appropriate.
 
+Use Framer Motion for interaction and page transition animation.
+
 Avoid custom CSS unless necessary.
 
 Prefer composition over customization.
+
+Internationalization Rules
+
+Use i18next with react-i18next.
+
+Support English and Korean.
+
+Default language should follow the user's environment.
 
 ⸻
 

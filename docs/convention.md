@@ -45,6 +45,19 @@ Frontend
 * TanStack Table
 * Zustand
 * Shiki
+* Framer Motion
+* i18next
+
+Internationalization
+
+* react-i18next
+
+Supported languages:
+
+* English
+* Korean
+
+Language must follow the user's environment when possible.
 
 Native
 
@@ -240,16 +253,29 @@ Do not use FSD.
 
 Project Structure
 
-src
-├─ core
+Repository Structure
+
+apps
+├─ desktop
+│  ├─ ui
+│  │  ├─ core
+│  │  ├─ features
+│  │  ├─ routes
+│  │  ├─ shared
+│  │  └─ styles
+│  └─ native
+│     └─ src
 │
-├─ features
-│
-├─ routes
-│
+packages
 ├─ shared
-│
-└─ styles
+├─ database
+└─ config
+
+Do not place application source code in the repository root.
+
+Desktop UI source belongs in apps/desktop/ui.
+
+Desktop native source belongs in apps/desktop/native.
 
 ⸻
 
@@ -257,7 +283,7 @@ Core Layer
 
 Contains application-wide concerns.
 
-core
+ui/core
 ├─ auth
 ├─ database
 ├─ tauri
@@ -271,7 +297,7 @@ Feature Layer
 
 Each feature owns its logic.
 
-features
+ui/features
 ├─ project
 ├─ run
 ├─ error
@@ -297,7 +323,7 @@ Shared Layer
 
 Reusable code only.
 
-shared
+ui/shared
 ├─ ui
 ├─ hooks
 ├─ utils
