@@ -70,9 +70,6 @@ export const AppShell = ({ children }: appShellProps) => {
                 <span className="block truncate text-sm font-medium">
                   {authUser.data?.username ?? t("auth.profile")}
                 </span>
-                <span className="block truncate text-xs text-muted-foreground">
-                  {t("auth.signedIn")}
-                </span>
               </span>
             </button>
             <Button
