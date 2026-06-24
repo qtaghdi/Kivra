@@ -19,6 +19,9 @@ export const LoginRoute = () => {
   const handleGithubLogin = () => {
     setLoginStarted(true);
     githubLogin.mutate(undefined, {
+      onSuccess: () => {
+        setLoginStarted(false);
+      },
       onError: () => {
         setLoginStarted(false);
       }

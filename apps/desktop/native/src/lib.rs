@@ -100,10 +100,15 @@ struct ProjectFile {
 }
 
 #[derive(Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
 struct AuthSessionTokens {
     access_token: String,
     refresh_token: String,
+    expires_at: Option<u64>,
+    expires_in: Option<u64>,
+    provider_refresh_token: Option<String>,
+    provider_token: Option<String>,
+    token_type: Option<String>,
+    user: serde_json::Value,
 }
 
 #[derive(Debug, Serialize)]
@@ -116,6 +121,12 @@ struct AuthTokenExchangeRequest<'a> {
 struct AuthTokenExchangeResponse {
     access_token: String,
     refresh_token: String,
+    expires_at: Option<u64>,
+    expires_in: Option<u64>,
+    provider_refresh_token: Option<String>,
+    provider_token: Option<String>,
+    token_type: Option<String>,
+    user: serde_json::Value,
 }
 
 #[tauri::command]
@@ -256,6 +267,12 @@ async fn exchange_auth_code(
     Ok(AuthSessionTokens {
         access_token: session.access_token,
         refresh_token: session.refresh_token,
+        expires_at: session.expires_at,
+        expires_in: session.expires_in,
+        provider_refresh_token: session.provider_refresh_token,
+        provider_token: session.provider_token,
+        token_type: session.token_type,
+        user: session.user,
     })
 }
 
@@ -302,9 +319,21 @@ fn read_auth_callback_request(mut stream: TcpStream) -> Result<String, KivraErro
         "Content-Type: text/html; charset=utf-8\r\n",
         "Connection: close\r\n",
         "\r\n",
-        "<!doctype html><html><body>",
-        "<script>window.close()</script>",
-        "Authentication complete. You can return to Kivra.",
+        "<!doctype html><html lang=\"en\"><head>",
+        "<meta charset=\"utf-8\">",
+        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">",
+        "<title>Kivra authentication complete</title>",
+        "<style>",
+        "body{margin:0;min-height:100vh;display:grid;place-items:center;",
+        "font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;",
+        "background:#0f172a;color:#e5e7eb}",
+        "main{max-width:420px;padding:32px;text-align:center}",
+        "h1{font-size:22px;margin:0 0 12px}",
+        "p{font-size:14px;line-height:1.6;color:#aeb8c8;margin:0}",
+        "</style></head><body><main>",
+        "<h1>Authentication complete</h1>",
+        "<p>You can return to Kivra now. This tab can be closed.</p>",
+        "</main>",
         "</body></html>"
     );
 

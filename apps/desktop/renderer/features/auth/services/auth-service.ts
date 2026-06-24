@@ -1,3 +1,5 @@
+import type { Session, User } from "@supabase/supabase-js";
+
 import { getAppEnv } from "@/core/config/env";
 import { supabase } from "@/core/supabase/supabase-client";
 import { syncUserProfile } from "@/core/supabase/sync-service";
@@ -6,8 +8,14 @@ import { invokeCommand, isTauriRuntime } from "@/core/tauri/tauri-client";
 const loopbackAuthCallbackUrl = "http://localhost:3000";
 
 type nativeAuthSession = {
-  accessToken: string;
-  refreshToken: string;
+  access_token: string;
+  expires_at?: number;
+  expires_in?: number;
+  provider_refresh_token?: string;
+  provider_token?: string;
+  refresh_token: string;
+  token_type?: string;
+  user: User;
 };
 
 export type authUser = {
@@ -21,28 +29,18 @@ export const getCurrentUser = async (): Promise<authUser | null> => {
     return null;
   }
 
-  const { data, error } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getSession();
+  const sessionUser = data.session?.user;
 
-  if (error || !data.user) {
+  if (error || !sessionUser) {
     return null;
   }
 
-  const user = {
-    id: data.user.id,
-    username:
-      data.user.user_metadata.user_name ??
-      data.user.user_metadata.preferred_username ??
-      data.user.email ??
-      "GitHub User",
-    avatarUrl: data.user.user_metadata.avatar_url ?? null
-  };
+  const user = buildAuthUser(sessionUser);
 
-  await syncUserProfile({
+  void syncUserProfile({
     id: user.id,
-    githubId:
-      data.user.user_metadata.provider_id ??
-      data.user.user_metadata.sub ??
-      data.user.id,
+    githubId: getGithubUserId(sessionUser),
     username: user.username,
     avatarUrl: user.avatarUrl
   });
@@ -50,7 +48,7 @@ export const getCurrentUser = async (): Promise<authUser | null> => {
   return user;
 };
 
-export const signInWithGithub = async () => {
+export const signInWithGithub = async (): Promise<authUser | null> => {
   if (!supabase) {
     throw new Error("SUPABASE_CONFIG_REQUIRED");
   }
@@ -67,7 +65,7 @@ export const signInWithGithub = async () => {
       throw error;
     }
 
-    return;
+    return null;
   }
 
   const callbackUrlPromise = invokeCommand<string>("wait_for_auth_callback");
@@ -88,18 +86,20 @@ export const signInWithGithub = async () => {
   }
 
   await invokeCommand("open_external_url", { url: data.url });
-  await handleAuthCallbackUrl(await callbackUrlPromise);
+  const callbackUrl = await callbackUrlPromise;
+
+  return handleAuthCallbackUrl(callbackUrl);
 };
 
-export const handleAuthCallbackUrl = async (url: string): Promise<boolean> => {
+export const handleAuthCallbackUrl = async (url: string): Promise<authUser | null> => {
   if (!supabase) {
-    return false;
+    return null;
   }
 
   const callbackUrl = parseAuthCallbackUrl(url);
 
   if (!callbackUrl) {
-    return false;
+    return null;
   }
 
   const error = callbackUrl.searchParams.get("error_description");
@@ -111,13 +111,11 @@ export const handleAuthCallbackUrl = async (url: string): Promise<boolean> => {
   const code = callbackUrl.searchParams.get("code");
 
   if (!code) {
-    return false;
+    return null;
   }
 
   if (isTauriRuntime()) {
-    await exchangeDesktopAuthCode(code);
-
-    return true;
+    return exchangeDesktopAuthCode(code);
   }
 
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
@@ -126,7 +124,7 @@ export const handleAuthCallbackUrl = async (url: string): Promise<boolean> => {
     throw exchangeError;
   }
 
-  return true;
+  return getCurrentUser();
 };
 
 export const getGithubAccessToken = async (): Promise<string | null> => {
@@ -166,13 +164,14 @@ const parseAuthCallbackUrl = (url: string) => {
   }
 };
 
-const exchangeDesktopAuthCode = async (code: string) => {
+const exchangeDesktopAuthCode = async (code: string): Promise<authUser> => {
   if (!supabase) {
-    return;
+    throw new Error("SUPABASE_CONFIG_REQUIRED");
   }
 
   const env = getAppEnv();
-  const verifierStorageKey = getCodeVerifierStorageKey(env.supabaseUrl);
+  const authStorageKey = getAuthStorageKey(env.supabaseUrl);
+  const verifierStorageKey = `${authStorageKey}-code-verifier`;
   const verifier = readCodeVerifier(verifierStorageKey);
 
   if (!verifier) {
@@ -185,22 +184,42 @@ const exchangeDesktopAuthCode = async (code: string) => {
     code,
     codeVerifier: verifier.value
   });
-  const { error } = await supabase.auth.setSession({
-    access_token: session.accessToken,
-    refresh_token: session.refreshToken
+
+  persistDesktopSession(authStorageKey, session);
+  localStorage.removeItem(verifier.key);
+
+  const user = buildAuthUser(session.user);
+
+  void syncUserProfile({
+    id: user.id,
+    githubId: getGithubUserId(session.user),
+    username: user.username,
+    avatarUrl: user.avatarUrl
   });
 
-  if (error) {
-    throw error;
-  }
-
-  localStorage.removeItem(verifier.key);
+  return user;
 };
 
-const getCodeVerifierStorageKey = (supabaseUrl: string) => {
+const getAuthStorageKey = (supabaseUrl: string) => {
   const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
 
-  return `sb-${projectRef}-auth-token-code-verifier`;
+  return `sb-${projectRef}-auth-token`;
+};
+
+const persistDesktopSession = (storageKey: string, session: nativeAuthSession) => {
+  const currentTime = Math.round(Date.now() / 1000);
+  const expiresIn = session.expires_in ?? 3600;
+  const expiresAt =
+    session.expires_at ??
+    currentTime + expiresIn;
+  const storedSession: Session = {
+    ...session,
+    expires_at: expiresAt,
+    expires_in: expiresIn,
+    token_type: "bearer"
+  };
+
+  localStorage.setItem(storageKey, JSON.stringify(storedSession));
 };
 
 const readCodeVerifier = (preferredKey: string) => {
@@ -231,4 +250,18 @@ const readCodeVerifier = (preferredKey: string) => {
     key: fallbackKey,
     value: fallbackValue
   };
+};
+
+const buildAuthUser = (user: User): authUser => ({
+  id: user.id,
+  username:
+    user.user_metadata.user_name ??
+    user.user_metadata.preferred_username ??
+    user.email ??
+    "GitHub User",
+  avatarUrl: user.user_metadata.avatar_url ?? null
+});
+
+const getGithubUserId = (user: User) => {
+  return user.user_metadata.provider_id ?? user.user_metadata.sub ?? user.id;
 };

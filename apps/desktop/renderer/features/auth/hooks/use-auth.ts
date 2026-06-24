@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
+  type authUser,
   getCurrentUser,
   signInWithGithub,
   signOut
@@ -17,8 +18,8 @@ export const useGithubLogin = () => {
 
   return useMutation({
     mutationFn: signInWithGithub,
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+    onSuccess: async (user) => {
+      queryClient.setQueryData<authUser | null>(["auth-user"], user);
       void queryClient.invalidateQueries({ queryKey: ["projects"] });
     }
   });
