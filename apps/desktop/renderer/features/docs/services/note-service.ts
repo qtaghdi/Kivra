@@ -2,6 +2,7 @@ import { fetchSyncedNotes, syncNote } from "@/core/supabase/sync-service";
 import type { resolutionNote } from "@/features/docs/types/note";
 
 const storagePrefix = "kivra.notes";
+const projectNoteErrorId = "__project__";
 
 const getStorageKey = (projectId: string) => `${storagePrefix}.${projectId}`;
 
@@ -11,7 +12,7 @@ const parseNotes = (rawNotes: string | null): resolutionNote[] => {
   }
 
   try {
-    return JSON.parse(rawNotes) as resolutionNote[];
+    return (JSON.parse(rawNotes) as Array<Partial<resolutionNote>>).map(normalizeNote);
   } catch {
     return [];
   }
@@ -23,8 +24,13 @@ export const getProjectNotes = (projectId: string): resolutionNote[] =>
 export const getResolvedErrorIds = (projectId: string): Set<string> =>
   new Set(
     getProjectNotes(projectId)
-      .filter((note) => note.content.trim().length > 0)
-      .map((note) => note.errorId)
+      .flatMap((note) =>
+        note.kind === "error" &&
+        note.errorId &&
+        note.content.trim().length > 0
+          ? [note.errorId]
+          : []
+      )
   );
 
 const writeProjectNotes = (projectId: string, notes: resolutionNote[]) => {
@@ -51,6 +57,21 @@ const mergeNotes = (
   );
 };
 
+const normalizeNote = (note: Partial<resolutionNote>): resolutionNote => {
+  const now = new Date().toISOString();
+  const errorId = note.errorId === projectNoteErrorId ? null : note.errorId ?? null;
+
+  return {
+    id: note.id ?? crypto.randomUUID(),
+    errorId,
+    projectId: note.projectId ?? "local",
+    content: note.content ?? "",
+    kind: note.kind ?? (errorId ? "error" : "project"),
+    createdAt: note.createdAt ?? now,
+    updatedAt: note.updatedAt ?? note.createdAt ?? now
+  };
+};
+
 export const getMergedProjectNotes = async (
   projectId: string
 ): Promise<resolutionNote[]> => {
@@ -69,8 +90,39 @@ export const getErrorNote = (args: {
   errorId: string;
   projectId: string;
 }): resolutionNote | null =>
-  getProjectNotes(args.projectId).find((note) => note.errorId === args.errorId) ??
-  null;
+  getProjectNotes(args.projectId).find(
+    (note) => note.kind === "error" && note.errorId === args.errorId
+  ) ?? null;
+
+export const getProjectMemo = (projectId: string): resolutionNote | null =>
+  getProjectNotes(projectId).find((note) => note.kind === "project") ?? null;
+
+export const saveProjectMemo = (args: {
+  content: string;
+  projectId: string;
+}): resolutionNote => {
+  const notes = getProjectNotes(args.projectId);
+  const existingNote = notes.find((note) => note.kind === "project");
+  const now = new Date().toISOString();
+  const nextNote: resolutionNote = {
+    id: existingNote?.id ?? crypto.randomUUID(),
+    errorId: null,
+    projectId: args.projectId,
+    content: args.content,
+    kind: "project",
+    createdAt: existingNote?.createdAt ?? now,
+    updatedAt: now
+  };
+  const nextNotes = [
+    nextNote,
+    ...notes.filter((note) => note.kind !== "project")
+  ];
+
+  writeProjectNotes(args.projectId, nextNotes);
+  void syncNote(nextNote);
+
+  return nextNote;
+};
 
 export const saveErrorNote = (args: {
   content: string;
@@ -85,12 +137,15 @@ export const saveErrorNote = (args: {
     errorId: args.errorId,
     projectId: args.projectId,
     content: args.content,
+    kind: "error",
     createdAt: existingNote?.createdAt ?? now,
     updatedAt: now
   };
   const nextNotes = [
     nextNote,
-    ...notes.filter((note) => note.errorId !== args.errorId)
+    ...notes.filter(
+      (note) => note.kind !== "error" || note.errorId !== args.errorId
+    )
   ];
 
   writeProjectNotes(args.projectId, nextNotes);

@@ -152,7 +152,9 @@ export const syncNote = async (note: resolutionNote): Promise<boolean> => {
   const { error } = await supabase.from("notes").upsert(
     {
       id: note.id,
-      error_id: note.errorId,
+      error_id: note.kind === "error" ? note.errorId : null,
+      project_id: note.kind === "project" ? note.projectId : null,
+      kind: note.kind,
       content: note.content,
       created_at: note.createdAt
     },
@@ -268,24 +270,48 @@ export const fetchSyncedNotes = async (
     return [];
   }
 
-  const { data, error } = await supabase
+  const { data: errorNotes, error: errorNotesError } = await supabase
     .from("notes")
-    .select("id, error_id, content, created_at, errors(project_id)")
+    .select("id, error_id, content, kind, created_at, errors(project_id)")
+    .eq("kind", "error")
     .eq("errors.project_id", projectId)
     .order("created_at", { ascending: false });
 
-  if (error || !data) {
+  if (errorNotesError || !errorNotes) {
     return [];
   }
 
-  return data
-    .filter((item) => item.errors)
-    .map((item) => ({
+  const { data: projectNotes, error: projectNotesError } = await supabase
+    .from("notes")
+    .select("id, project_id, content, kind, created_at")
+    .eq("kind", "project")
+    .eq("project_id", projectId)
+    .order("created_at", { ascending: false });
+
+  if (projectNotesError || !projectNotes) {
+    return [];
+  }
+
+  return [
+    ...errorNotes
+      .filter((item) => item.errors)
+      .map((item) => ({
+        id: item.id,
+        errorId: item.error_id,
+        projectId,
+        content: item.content,
+        kind: "error" as const,
+        createdAt: item.created_at,
+        updatedAt: item.created_at
+      })),
+    ...projectNotes.map((item) => ({
       id: item.id,
-      errorId: item.error_id,
+      errorId: null,
       projectId,
       content: item.content,
+      kind: "project" as const,
       createdAt: item.created_at,
       updatedAt: item.created_at
-    }));
+    }))
+  ];
 };

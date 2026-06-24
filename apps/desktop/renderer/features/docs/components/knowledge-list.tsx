@@ -50,13 +50,17 @@ export const KnowledgeList = ({
     () =>
       notes.map((note) => ({
         note,
-        error: errors.find((error) => error.id === note.errorId) ?? null
+        error:
+          note.kind === "error"
+            ? errors.find((error) => error.id === note.errorId) ?? null
+            : null
       })),
     [errors, notes]
   );
   const filteredItems = searchableItems.filter((item) => {
     const haystack = [
       item.note.content,
+      item.note.kind === "project" ? t("notes.projectMemo") : null,
       item.error?.message,
       item.error?.filePath
     ]
@@ -90,10 +94,14 @@ export const KnowledgeList = ({
           {filteredItems.map((item) => (
             <article key={item.note.id} className="rounded-md border bg-card p-3">
               <div className="text-sm font-medium">
-                {item.error?.message ?? t("knowledge.unknownError")}
+                {item.note.kind === "project"
+                  ? t("notes.projectMemo")
+                  : item.error?.message ?? t("knowledge.unknownError")}
               </div>
               <div className="mt-1 font-mono text-xs text-muted-foreground">
-                {item.error?.filePath ?? "raw"}
+                {item.note.kind === "project"
+                  ? t("knowledge.projectWide")
+                  : item.error?.filePath ?? "raw"}
               </div>
               <p className="mt-3 whitespace-pre-wrap text-sm">{item.note.content}</p>
             </article>

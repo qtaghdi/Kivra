@@ -50,7 +50,9 @@ export type databaseError = {
 
 export type databaseNote = {
   id: string;
-  error_id: string;
+  error_id: string | null;
+  project_id: string | null;
+  kind: "error" | "project";
   content: string;
   created_at: string;
 };

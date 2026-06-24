@@ -128,6 +128,9 @@ export const resources = {
       },
       notes: {
         placeholder: "Cause, resolution, and reusable debugging notes",
+        projectMemo: "Project memo",
+        projectMemoDetail: "Capture repository context, review notes, and decisions for this project.",
+        projectMemoPlaceholder: "Repository context, decisions, TODOs, links, and review notes",
         save: "Save Note",
         selectError: "Select an error to write a resolution note."
       },
@@ -135,6 +138,7 @@ export const resources = {
         searchPlaceholder: "Search error messages, file paths, and notes",
         empty: "No saved knowledge yet.",
         emptyDetail: "Save a resolution note from the Errors tab. It will become searchable here.",
+        projectWide: "project-wide",
         unknownError: "Unknown error"
       }
     }
@@ -265,6 +269,9 @@ export const resources = {
       },
       notes: {
         placeholder: "원인, 해결 방법, 재사용할 디버깅 메모",
+        projectMemo: "프로젝트 메모",
+        projectMemoDetail: "이 프로젝트의 저장소 맥락, 리뷰 메모, 결정 사항을 저장합니다.",
+        projectMemoPlaceholder: "저장소 맥락, 결정 사항, TODO, 링크, 리뷰 메모",
         save: "노트 저장",
         selectError: "해결 노트를 쓰려면 에러를 선택하세요."
       },
@@ -272,6 +279,7 @@ export const resources = {
         searchPlaceholder: "에러 메시지, 파일 경로, 노트 검색",
         empty: "아직 저장된 지식이 없습니다.",
         emptyDetail: "에러 탭에서 해결 노트를 저장하면 여기에서 검색할 수 있습니다.",
+        projectWide: "프로젝트 전체",
         unknownError: "알 수 없는 에러"
       }
     }

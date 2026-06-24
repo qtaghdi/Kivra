@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { KnowledgeList, ResolutionNotes } from "@/features/docs";
+import { KnowledgeList, ProjectMemo, ResolutionNotes } from "@/features/docs";
 import { getResolvedErrorIds } from "@/features/docs/services/note-service";
 import { ErrorTable, type detectedError } from "@/features/error";
 import { ProjectExplorer, ProjectFileViewer, useProject } from "@/features/project";
@@ -202,11 +202,19 @@ export const ProjectRoute = () => {
               </div>
             )}
             {activeTab === "knowledge" && (
-              <KnowledgeList
-                errors={errors}
-                refreshKey={notesVersion}
-                projectId={projectData.id}
-              />
+              <div className="grid gap-4">
+                <ProjectMemo
+                  onMemoSaved={() =>
+                    setNotesVersion((currentVersion) => currentVersion + 1)
+                  }
+                  projectId={projectData.id}
+                />
+                <KnowledgeList
+                  errors={errors}
+                  refreshKey={notesVersion}
+                  projectId={projectData.id}
+                />
+              </div>
             )}
             {activeTab === "settings" && (
               <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
