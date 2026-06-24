@@ -12,10 +12,17 @@ export const useAuthUser = () =>
     queryFn: getCurrentUser
   });
 
-export const useGithubLogin = () =>
-  useMutation({
-    mutationFn: signInWithGithub
+export const useGithubLogin = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: signInWithGithub,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["auth-user"] });
+      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+    }
   });
+};
 
 export const useSignOut = () => {
   const queryClient = useQueryClient();

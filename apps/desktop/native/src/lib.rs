@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::HashSet,
     ffi::OsStr,
@@ -29,6 +29,8 @@ enum KivraError {
     InvalidExternalUrl,
     #[error("Unable to receive auth callback: {0}")]
     AuthCallback(String),
+    #[error("Unable to exchange auth code: {0}")]
+    AuthExchange(String),
 }
 
 impl Serialize for KivraError {
@@ -95,6 +97,25 @@ struct ProjectFile {
     content: String,
     size: u64,
     truncated: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct AuthSessionTokens {
+    access_token: String,
+    refresh_token: String,
+}
+
+#[derive(Debug, Serialize)]
+struct AuthTokenExchangeRequest<'a> {
+    auth_code: &'a str,
+    code_verifier: &'a str,
+}
+
+#[derive(Debug, Deserialize)]
+struct AuthTokenExchangeResponse {
+    access_token: String,
+    refresh_token: String,
 }
 
 #[tauri::command]
@@ -181,6 +202,61 @@ async fn wait_for_auth_callback() -> Result<String, KivraError> {
     tauri::async_runtime::spawn_blocking(wait_for_loopback_auth_callback)
         .await
         .map_err(|error| KivraError::AuthCallback(error.to_string()))?
+}
+
+#[tauri::command]
+async fn exchange_auth_code(
+    supabase_url: String,
+    supabase_anon_key: String,
+    code: String,
+    code_verifier: String,
+) -> Result<AuthSessionTokens, KivraError> {
+    if !supabase_url.starts_with("https://") {
+        return Err(KivraError::AuthExchange(
+            "Supabase URL must use HTTPS".to_string(),
+        ));
+    }
+
+    if supabase_anon_key.is_empty() || code.is_empty() || code_verifier.is_empty() {
+        return Err(KivraError::AuthExchange(
+            "Missing OAuth token exchange input".to_string(),
+        ));
+    }
+
+    let token_url = format!(
+        "{}/auth/v1/token?grant_type=pkce",
+        supabase_url.trim_end_matches('/')
+    );
+    let response = reqwest::Client::new()
+        .post(token_url)
+        .header("apikey", &supabase_anon_key)
+        .bearer_auth(&supabase_anon_key)
+        .json(&AuthTokenExchangeRequest {
+            auth_code: &code,
+            code_verifier: &code_verifier,
+        })
+        .send()
+        .await
+        .map_err(|error| KivraError::AuthExchange(error.to_string()))?;
+    let status = response.status();
+    let body = response
+        .text()
+        .await
+        .map_err(|error| KivraError::AuthExchange(error.to_string()))?;
+
+    if !status.is_success() {
+        return Err(KivraError::AuthExchange(format!(
+            "Supabase token exchange failed ({status}): {body}"
+        )));
+    }
+
+    let session = serde_json::from_str::<AuthTokenExchangeResponse>(&body)
+        .map_err(|error| KivraError::AuthExchange(error.to_string()))?;
+
+    Ok(AuthSessionTokens {
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+    })
 }
 
 fn wait_for_loopback_auth_callback() -> Result<String, KivraError> {
@@ -581,6 +657,7 @@ pub fn run() {
             read_project_directory,
             open_external_url,
             wait_for_auth_callback,
+            exchange_auth_code,
             run_project_command,
             read_project_file
         ])
