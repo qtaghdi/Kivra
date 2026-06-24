@@ -1,22 +1,10 @@
-import type { Session, User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
-import { getAppEnv } from "@/core/config/env";
 import { supabase } from "@/core/supabase/supabase-client";
 import { syncUserProfile } from "@/core/supabase/sync-service";
 import { invokeCommand, isTauriRuntime } from "@/core/tauri/tauri-client";
 
 const loopbackAuthCallbackUrl = "http://127.0.0.1:3000/auth/callback";
-
-type nativeAuthSession = {
-  access_token: string;
-  expires_at?: number;
-  expires_in?: number;
-  provider_refresh_token?: string;
-  provider_token?: string;
-  refresh_token: string;
-  token_type?: string;
-  user: User;
-};
 
 export type authUser = {
   id: string;
@@ -114,10 +102,6 @@ export const handleAuthCallbackUrl = async (url: string): Promise<authUser | nul
     return null;
   }
 
-  if (isTauriRuntime()) {
-    return exchangeDesktopAuthCode(code);
-  }
-
   const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (exchangeError) {
@@ -164,103 +148,6 @@ const parseAuthCallbackUrl = (url: string) => {
   } catch {
     return null;
   }
-};
-
-const exchangeDesktopAuthCode = async (code: string): Promise<authUser> => {
-  if (!supabase) {
-    throw new Error("SUPABASE_CONFIG_REQUIRED");
-  }
-
-  const env = getAppEnv();
-  const authStorageKey = getAuthStorageKey(env.supabaseUrl);
-  const verifierStorageKey = `${authStorageKey}-code-verifier`;
-  const verifier = readCodeVerifier(verifierStorageKey);
-
-  if (!verifier) {
-    throw new Error("GITHUB_OAUTH_CODE_VERIFIER_MISSING");
-  }
-
-  const session = await invokeCommand<nativeAuthSession>("exchange_auth_code", {
-    supabaseUrl: env.supabaseUrl,
-    supabaseAnonKey: env.supabaseAnonKey,
-    code,
-    codeVerifier: verifier.value
-  });
-
-  persistDesktopSession(authStorageKey, session);
-  const { error } = await supabase.auth.setSession({
-    access_token: session.access_token,
-    refresh_token: session.refresh_token
-  });
-
-  if (error) {
-    throw error;
-  }
-
-  localStorage.removeItem(verifier.key);
-
-  const user = buildAuthUser(session.user);
-
-  void syncUserProfile({
-    id: user.id,
-    githubId: getGithubUserId(session.user),
-    username: user.username,
-    avatarUrl: user.avatarUrl
-  });
-
-  return user;
-};
-
-const getAuthStorageKey = (supabaseUrl: string) => {
-  const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-
-  return `sb-${projectRef}-auth-token`;
-};
-
-const persistDesktopSession = (storageKey: string, session: nativeAuthSession) => {
-  const currentTime = Math.round(Date.now() / 1000);
-  const expiresIn = session.expires_in ?? 3600;
-  const expiresAt =
-    session.expires_at ??
-    currentTime + expiresIn;
-  const storedSession: Session = {
-    ...session,
-    expires_at: expiresAt,
-    expires_in: expiresIn,
-    token_type: "bearer"
-  };
-
-  localStorage.setItem(storageKey, JSON.stringify(storedSession));
-};
-
-const readCodeVerifier = (preferredKey: string) => {
-  const preferredValue = localStorage.getItem(preferredKey);
-
-  if (preferredValue) {
-    return {
-      key: preferredKey,
-      value: preferredValue.split("/")[0]
-    };
-  }
-
-  const fallbackKey = Object.keys(localStorage).find((key) => {
-    return key.endsWith("-code-verifier") && Boolean(localStorage.getItem(key));
-  });
-
-  if (!fallbackKey) {
-    return null;
-  }
-
-  const fallbackValue = localStorage.getItem(fallbackKey)?.split("/")[0];
-
-  if (!fallbackValue) {
-    return null;
-  }
-
-  return {
-    key: fallbackKey,
-    value: fallbackValue
-  };
 };
 
 const buildAuthUser = (user: User): authUser => ({
