@@ -1,0 +1,14 @@
+{
+  "name": "kivra-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @kivra/desktop dev",
+    "build": "pnpm --filter @kivra/desktop build",
+    "preview": "pnpm --filter @kivra/desktop preview",
+    "desktop:tauri:dev": "pnpm --filter @kivra/desktop tauri:dev",
+    "desktop:tauri:build": "pnpm --filter @kivra/desktop tauri:build"
+  },
+  "packageManager": "pnpm@9.12.3"
+}
