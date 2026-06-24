@@ -1,63 +1,26 @@
 import { invokeCommand } from "@/core/tauri/tauri-client";
 import { fetchSyncedProjects, syncProject } from "@/core/supabase/sync-service";
+import { scannedProjectSchema } from "@/features/project/schemas/project-schema";
 import type { project } from "@/features/project/types/project";
 import {
   createGithubProject,
   hydrateGithubProjectTree,
   type githubRepository
 } from "@/features/project/services/github-project-service";
-
-const storageKey = "kivra.projects";
+import {
+  mergeProjects,
+  readStoredProjects,
+  writeStoredProjects
+} from "@/features/project/services/project-storage";
 
 type scannedProject = Omit<project, "id" | "createdAt" | "source">;
 
-function readStoredProjects(): project[] {
-  const rawProjects = window.localStorage.getItem(storageKey);
-
-  if (!rawProjects) {
-    return [];
-  }
-
-  try {
-    return (JSON.parse(rawProjects) as project[]).map(normalizeProject);
-  } catch {
-    return [];
-  }
-}
-
-function writeStoredProjects(projects: project[]) {
-  window.localStorage.setItem(storageKey, JSON.stringify(projects));
-}
-
-function mergeProjects(localProjects: project[], syncedProjects: project[]) {
-  const projectMap = new Map<string, project>();
-
-  for (const syncedProject of syncedProjects) {
-    projectMap.set(syncedProject.id, syncedProject);
-  }
-
-  for (const localProject of localProjects) {
-    projectMap.set(localProject.id, localProject);
-  }
-
-  return Array.from(projectMap.values()).sort(
-    (firstProject, secondProject) =>
-      new Date(secondProject.createdAt).getTime() -
-      new Date(firstProject.createdAt).getTime()
+export const registerProject = async (projectPath: string): Promise<project> => {
+  const scannedProject = scannedProjectSchema.parse(
+    await invokeCommand<scannedProject>("scan_project", {
+      projectPath
+    })
   );
-}
-
-function normalizeProject(project: project): project {
-  return {
-    ...project,
-    source: project.source ?? "local"
-  };
-}
-
-export async function registerProject(projectPath: string): Promise<project> {
-  const scannedProject = await invokeCommand<scannedProject>("scan_project", {
-    projectPath
-  });
   const projects = readStoredProjects();
   const existingProject = projects.find((item) => item.path === scannedProject.path);
   const nextProject: project = {
@@ -75,9 +38,11 @@ export async function registerProject(projectPath: string): Promise<project> {
   void syncProject(nextProject);
 
   return nextProject;
-}
+};
 
-export async function importGithubProject(repo: githubRepository): Promise<project> {
+export const importGithubProject = async (
+  repo: githubRepository
+): Promise<project> => {
   const githubProject = await createGithubProject(repo);
   const projects = readStoredProjects();
   const existingProject = projects.find((item) => item.repositoryUrl === repo.htmlUrl);
@@ -95,11 +60,11 @@ export async function importGithubProject(repo: githubRepository): Promise<proje
   void syncProject(nextProject);
 
   return nextProject;
-}
+};
 
-export async function getProjects(): Promise<project[]> {
+export const getProjects = async (): Promise<project[]> => {
   const localProjects = readStoredProjects();
-  const syncedProjects = (await fetchSyncedProjects()).map(normalizeProject);
+  const syncedProjects = await fetchSyncedProjects();
   const projects = mergeProjects(localProjects, syncedProjects);
 
   if (syncedProjects.length > 0) {
@@ -107,9 +72,9 @@ export async function getProjects(): Promise<project[]> {
   }
 
   return projects;
-}
+};
 
-export async function getProject(projectId: string): Promise<project | null> {
+export const getProject = async (projectId: string): Promise<project | null> => {
   const project = (await getProjects()).find((item) => item.id === projectId) ?? null;
 
   if (!project || project.source !== "github" || project.tree.children?.length) {
@@ -127,4 +92,4 @@ export async function getProject(projectId: string): Promise<project | null> {
   );
 
   return hydratedProject;
-}
+};

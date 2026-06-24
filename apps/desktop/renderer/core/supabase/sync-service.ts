@@ -1,6 +1,7 @@
 import { supabase } from "@/core/supabase/supabase-client";
 import type { resolutionNote } from "@/features/docs";
 import type { project } from "@/features/project";
+import { projectsSchema } from "@/features/project/schemas/project-schema";
 import type { runResult } from "@/features/run";
 
 type syncUserProfileArgs = {
@@ -10,7 +11,7 @@ type syncUserProfileArgs = {
   username: string;
 };
 
-async function getUserId(): Promise<string | null> {
+const getUserId = async (): Promise<string | null> => {
   if (!supabase) {
     return null;
   }
@@ -22,9 +23,11 @@ async function getUserId(): Promise<string | null> {
   }
 
   return data.user.id;
-}
+};
 
-export async function syncUserProfile(args: syncUserProfileArgs): Promise<boolean> {
+export const syncUserProfile = async (
+  args: syncUserProfileArgs
+): Promise<boolean> => {
   if (!supabase) {
     return false;
   }
@@ -41,9 +44,9 @@ export async function syncUserProfile(args: syncUserProfileArgs): Promise<boolea
   );
 
   return !error;
-}
+};
 
-export async function syncProject(project: project): Promise<boolean> {
+export const syncProject = async (project: project): Promise<boolean> => {
   if (!supabase) {
     return false;
   }
@@ -70,9 +73,9 @@ export async function syncProject(project: project): Promise<boolean> {
   );
 
   return !error;
-}
+};
 
-export async function syncRun(run: runResult): Promise<boolean> {
+export const syncRun = async (run: runResult): Promise<boolean> => {
   if (!supabase) {
     return false;
   }
@@ -139,9 +142,9 @@ export async function syncRun(run: runResult): Promise<boolean> {
   }
 
   return true;
-}
+};
 
-export async function syncNote(note: resolutionNote): Promise<boolean> {
+export const syncNote = async (note: resolutionNote): Promise<boolean> => {
   if (!supabase) {
     return false;
   }
@@ -157,9 +160,9 @@ export async function syncNote(note: resolutionNote): Promise<boolean> {
   );
 
   return !error;
-}
+};
 
-export async function fetchSyncedProjects(): Promise<project[]> {
+export const fetchSyncedProjects = async (): Promise<project[]> => {
   if (!supabase) {
     return [];
   }
@@ -180,27 +183,31 @@ export async function fetchSyncedProjects(): Promise<project[]> {
     return [];
   }
 
-  return data.map((item) => ({
-    id: item.id,
-    name: item.name,
-    path: item.repository_url ?? item.name,
-    runtime: item.runtime,
-    framework: item.framework,
-    packageManager: item.package_manager,
-    branch: item.branch,
-    repositoryUrl: item.repository_url,
-    createdAt: item.created_at,
-    source: item.repository_url ? "github" : "local",
-    tree: {
+  return projectsSchema.parse(
+    data.map((item) => ({
       id: item.id,
       name: item.name,
       path: item.repository_url ?? item.name,
-      type: "folder"
-    }
-  }));
-}
+      runtime: item.runtime,
+      framework: item.framework,
+      packageManager: item.package_manager,
+      branch: item.branch,
+      repositoryUrl: item.repository_url,
+      createdAt: item.created_at,
+      source: item.repository_url ? "github" : "local",
+      tree: {
+        id: item.id,
+        name: item.name,
+        path: item.repository_url ?? item.name,
+        type: "folder"
+      }
+    }))
+  );
+};
 
-export async function fetchSyncedRuns(projectId: string): Promise<runResult[]> {
+export const fetchSyncedRuns = async (
+  projectId: string
+): Promise<runResult[]> => {
   if (!supabase) {
     return [];
   }
@@ -252,9 +259,11 @@ export async function fetchSyncedRuns(projectId: string): Promise<runResult[]> {
       }))
     };
   });
-}
+};
 
-export async function fetchSyncedNotes(projectId: string): Promise<resolutionNote[]> {
+export const fetchSyncedNotes = async (
+  projectId: string
+): Promise<resolutionNote[]> => {
   if (!supabase) {
     return [];
   }
@@ -279,4 +288,4 @@ export async function fetchSyncedNotes(projectId: string): Promise<resolutionNot
       createdAt: item.created_at,
       updatedAt: item.created_at
     }));
-}
+};

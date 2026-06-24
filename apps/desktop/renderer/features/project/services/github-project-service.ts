@@ -1,9 +1,13 @@
+import { z } from "zod";
+
 import { getGithubAccessToken } from "@/features/auth/services/auth-service";
+import { projectFileSchema } from "@/features/project/schemas/project-schema";
 import type {
   project,
   projectFile,
   projectNode
 } from "@/features/project/types/project";
+import { addTreePath, sortTree } from "@/features/project/utils/project-tree";
 
 export type githubRepository = {
   id: number;
@@ -45,7 +49,38 @@ type githubContentResponse = {
   type: string;
 };
 
-async function githubFetch<T>(path: string): Promise<T> {
+const githubRepositoryResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  full_name: z.string(),
+  owner: z.object({ login: z.string() }),
+  default_branch: z.string(),
+  description: z.string().nullable(),
+  html_url: z.string(),
+  private: z.boolean(),
+  language: z.string().nullable(),
+  updated_at: z.string()
+});
+
+const githubRepositoriesResponseSchema = z.array(githubRepositoryResponseSchema);
+
+const githubTreeResponseSchema = z.object({
+  tree: z.array(
+    z.object({
+      path: z.string(),
+      type: z.enum(["blob", "tree"])
+    })
+  )
+});
+
+const githubContentResponseSchema = z.object({
+  content: z.string().optional(),
+  encoding: z.string().optional(),
+  size: z.number(),
+  type: z.string()
+});
+
+const githubFetch = async <T>(path: string): Promise<T> => {
   const token = await getGithubAccessToken();
 
   if (!token) {
@@ -65,11 +100,13 @@ async function githubFetch<T>(path: string): Promise<T> {
   }
 
   return response.json() as Promise<T>;
-}
+};
 
-export async function fetchGithubRepositories(): Promise<githubRepository[]> {
-  const repos = await githubFetch<githubRepositoryResponse[]>(
-    "/user/repos?per_page=50&sort=updated&type=all"
+export const fetchGithubRepositories = async (): Promise<githubRepository[]> => {
+  const repos = githubRepositoriesResponseSchema.parse(
+    await githubFetch<githubRepositoryResponse[]>(
+      "/user/repos?per_page=50&sort=updated&type=all"
+    )
   );
 
   return repos.map((repo) => ({
@@ -84,9 +121,11 @@ export async function fetchGithubRepositories(): Promise<githubRepository[]> {
     language: repo.language,
     updatedAt: repo.updated_at
   }));
-}
+};
 
-export async function createGithubProject(repo: githubRepository): Promise<project> {
+export const createGithubProject = async (
+  repo: githubRepository
+): Promise<project> => {
   const tree = await fetchGithubProjectTree({
     defaultBranch: repo.defaultBranch,
     fullName: repo.fullName,
@@ -107,9 +146,11 @@ export async function createGithubProject(repo: githubRepository): Promise<proje
     source: "github",
     tree
   };
-}
+};
 
-export async function hydrateGithubProjectTree(project: project): Promise<project> {
+export const hydrateGithubProjectTree = async (
+  project: project
+): Promise<project> => {
   const repoPath = getRepoPath(project);
 
   return {
@@ -121,19 +162,21 @@ export async function hydrateGithubProjectTree(project: project): Promise<projec
       name: project.name
     })
   };
-}
+};
 
-export async function readGithubProjectFile(args: {
+export const readGithubProjectFile = async (args: {
   filePath: string;
   project: project;
-}): Promise<projectFile> {
+}): Promise<projectFile> => {
   const repoPath = getRepoPath(args.project);
   const encodedPath = args.filePath
     .split("/")
     .map((part) => encodeURIComponent(part))
     .join("/");
-  const content = await githubFetch<githubContentResponse>(
-    `/repos/${repoPath}/contents/${encodedPath}?ref=${encodeURIComponent(args.project.branch)}`
+  const content = githubContentResponseSchema.parse(
+    await githubFetch<githubContentResponse>(
+      `/repos/${repoPath}/contents/${encodedPath}?ref=${encodeURIComponent(args.project.branch)}`
+    )
   );
 
   if (content.type !== "file" || content.encoding !== "base64" || !content.content) {
@@ -142,21 +185,23 @@ export async function readGithubProjectFile(args: {
 
   const decoded = decodeBase64Content(content.content);
 
-  return {
+  return projectFileSchema.parse({
     path: args.filePath,
     content: decoded.slice(0, 200_000),
     size: content.size,
     truncated: decoded.length > 200_000
-  };
-}
+  });
+};
 
-async function fetchGithubProjectTree(repo: {
+const fetchGithubProjectTree = async (repo: {
   defaultBranch: string;
   fullName: string;
   name: string;
-}): Promise<projectNode> {
-  const data = await githubFetch<githubTreeResponse>(
-    `/repos/${repo.fullName}/git/trees/${encodeURIComponent(repo.defaultBranch)}?recursive=1`
+}): Promise<projectNode> => {
+  const data = githubTreeResponseSchema.parse(
+    await githubFetch<githubTreeResponse>(
+      `/repos/${repo.fullName}/git/trees/${encodeURIComponent(repo.defaultBranch)}?recursive=1`
+    )
   );
   const root: projectNode = {
     id: repo.fullName,
@@ -177,49 +222,9 @@ async function fetchGithubProjectTree(repo: {
   sortTree(root);
 
   return root;
-}
+};
 
-function addTreePath(root: projectNode, path: string, type: "file" | "folder") {
-  const parts = path.split("/");
-  let current = root;
-
-  for (const [index, part] of parts.entries()) {
-    const isLast = index === parts.length - 1;
-    const childPath = parts.slice(0, index + 1).join("/");
-    const childType = isLast ? type : "folder";
-    const existing = current.children?.find((child) => child.name === part);
-
-    if (existing) {
-      current = existing;
-      continue;
-    }
-
-    const nextNode: projectNode = {
-      id: childPath,
-      name: part,
-      path: childPath,
-      type: childType,
-      children: childType === "folder" ? [] : undefined
-    };
-
-    current.children = current.children ?? [];
-    current.children.push(nextNode);
-    current = nextNode;
-  }
-}
-
-function sortTree(node: projectNode) {
-  node.children?.sort((first, second) => {
-    if (first.type !== second.type) {
-      return first.type === "folder" ? -1 : 1;
-    }
-
-    return first.name.localeCompare(second.name);
-  });
-  node.children?.forEach(sortTree);
-}
-
-function getRepoPath(project: project) {
+const getRepoPath = (project: project) => {
   if (project.path.includes("/")) {
     return project.path;
   }
@@ -229,9 +234,9 @@ function getRepoPath(project: project) {
   }
 
   return new URL(project.repositoryUrl).pathname.replace(/^\/|\.git$/g, "");
-}
+};
 
-function inferRuntime(language: string | null) {
+const inferRuntime = (language: string | null) => {
   if (!language) {
     return "GitHub";
   }
@@ -241,11 +246,11 @@ function inferRuntime(language: string | null) {
   }
 
   return language;
-}
+};
 
-function decodeBase64Content(content: string) {
+const decodeBase64Content = (content: string) => {
   const binary = window.atob(content.replace(/\n/g, ""));
   const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
 
   return new TextDecoder().decode(bytes);
-}
+};
