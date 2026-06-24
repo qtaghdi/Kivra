@@ -5,7 +5,7 @@ import { supabase } from "@/core/supabase/supabase-client";
 import { syncUserProfile } from "@/core/supabase/sync-service";
 import { invokeCommand, isTauriRuntime } from "@/core/tauri/tauri-client";
 
-const loopbackAuthCallbackUrl = "http://localhost:3000";
+const loopbackAuthCallbackUrl = "http://127.0.0.1:3000/auth/callback";
 
 type nativeAuthSession = {
   access_token: string;
@@ -186,6 +186,15 @@ const exchangeDesktopAuthCode = async (code: string): Promise<authUser> => {
   });
 
   persistDesktopSession(authStorageKey, session);
+  const { error } = await supabase.auth.setSession({
+    access_token: session.access_token,
+    refresh_token: session.refresh_token
+  });
+
+  if (error) {
+    throw error;
+  }
+
   localStorage.removeItem(verifier.key);
 
   const user = buildAuthUser(session.user);

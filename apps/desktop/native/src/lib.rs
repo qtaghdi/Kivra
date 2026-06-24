@@ -341,7 +341,7 @@ fn read_auth_callback_request(mut stream: TcpStream) -> Result<String, KivraErro
         .write_all(response.as_bytes())
         .map_err(|error| KivraError::AuthCallback(error.to_string()))?;
 
-    Ok(format!("http://localhost:3000{request_target}"))
+    Ok(format!("http://127.0.0.1:3000{request_target}"))
 }
 
 #[tauri::command]

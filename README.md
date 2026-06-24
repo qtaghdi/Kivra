@@ -44,6 +44,12 @@ VITE_SUPABASE_ANON_KEY=
 When Supabase is configured, GitHub OAuth and cloud sync are enabled. Without
 those values, Kivra continues to work as a local-only desktop app.
 
+For desktop OAuth, add this redirect URL in Supabase Auth settings:
+
+```text
+http://127.0.0.1:3000/auth/callback
+```
+
 ## Verify
 
 ```bash
