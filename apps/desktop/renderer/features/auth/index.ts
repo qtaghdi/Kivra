@@ -1,3 +1,4 @@
+export { AuthGate } from "@/features/auth/components/auth-gate";
 export { GithubLoginPanel } from "@/features/auth/components/github-login-panel";
 export {
   useAuthUser,

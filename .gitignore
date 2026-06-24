@@ -8,3 +8,12 @@ apps/*/native/gen/
 
 .DS_Store
 *.log
+
+.env
+.env.local
+.env.*.local
+apps/*/.env
+apps/*/.env.local
+apps/*/.env.*.local
+!.env.example
+!apps/*/.env.example

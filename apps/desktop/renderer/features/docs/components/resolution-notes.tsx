@@ -45,7 +45,7 @@ export function ResolutionNotes({
 
   if (!error) {
     return (
-      <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
+      <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
         {t("notes.selectError")}
       </div>
     );
@@ -58,7 +58,7 @@ export function ResolutionNotes({
       transition={{ duration: 0.2, ease: "easeOut" }}
       className="space-y-3"
     >
-      <section className="rounded-md border bg-white p-4">
+      <section className="rounded-md border bg-card p-3">
         <div className="text-xs font-medium uppercase text-muted-foreground">
           {t("errors.detail")}
         </div>
@@ -75,7 +75,7 @@ export function ResolutionNotes({
           />
         </div>
         {error.stackTrace.trim().length > 0 && (
-          <pre className="mt-3 max-h-40 overflow-auto rounded bg-muted p-3 text-xs">
+          <pre className="mt-3 max-h-40 overflow-auto rounded bg-background p-3 font-mono text-xs">
             {error.stackTrace}
           </pre>
         )}
@@ -84,7 +84,7 @@ export function ResolutionNotes({
         value={content}
         onChange={(event) => setContent(event.target.value)}
         placeholder={t("notes.placeholder")}
-        className="min-h-[320px] w-full resize-none rounded-md border bg-white p-3 text-sm outline-none focus:border-primary"
+        className="min-h-[320px] w-full resize-none rounded-md border bg-background p-3 text-sm outline-none focus:border-foreground"
       />
       <Button type="button" variant="primary" onClick={handleSave}>
         <Save className="h-4 w-4" />
@@ -101,7 +101,7 @@ type detailItemProps = {
 
 function DetailItem({ label, value }: detailItemProps) {
   return (
-    <div className="min-w-0 rounded bg-muted px-3 py-2">
+    <div className="min-w-0 rounded bg-background px-3 py-2">
       <div className="text-muted-foreground">{label}</div>
       <div className="mt-1 truncate font-mono">{value}</div>
     </div>

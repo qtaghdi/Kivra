@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getProject,
   getProjects,
+  importGithubProject,
   registerProject
 } from "@/features/project/services/project-service";
 
@@ -25,6 +26,17 @@ export function useRegisterProject() {
 
   return useMutation({
     mutationFn: registerProject,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["projects"] });
+    }
+  });
+}
+
+export function useImportGithubProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: importGithubProject,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["projects"] });
     }

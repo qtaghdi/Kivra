@@ -13,7 +13,7 @@ export function RunLogPanel({ run }: runLogPanelProps) {
 
   if (!run) {
     return (
-      <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
+      <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
         {t("runs.selectRun")}
       </div>
     );
@@ -26,7 +26,7 @@ export function RunLogPanel({ run }: runLogPanelProps) {
       transition={{ duration: 0.18, ease: "easeOut" }}
       className="grid gap-3"
     >
-      <div className="rounded-md border bg-white p-4">
+      <div className="rounded-md border bg-card p-3">
         <div className="flex items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-sm font-medium">
@@ -47,7 +47,7 @@ export function RunLogPanel({ run }: runLogPanelProps) {
       <OutputBlock label={t("runs.stderr")} value={run.stderr} tone="danger" />
 
       {run.errors.length > 0 && (
-        <div className="rounded-md border bg-white p-4">
+        <div className="rounded-md border bg-card p-3">
           <div className="mb-3 flex items-center gap-2 text-sm font-medium">
             <AlertTriangle className="h-4 w-4 text-destructive" />
             {t("runs.detectedErrors")}
@@ -56,7 +56,7 @@ export function RunLogPanel({ run }: runLogPanelProps) {
             {run.errors.map((error, index) => (
               <div
                 key={error.id}
-                className="rounded-md border bg-muted p-3"
+                className="rounded-md border bg-background p-3"
               >
                 <div className="text-sm">{error.message}</div>
                 <div className="mt-1 font-mono text-xs text-muted-foreground">
@@ -83,15 +83,15 @@ function OutputBlock({ label, tone = "default", value }: outputBlockProps) {
   const content = value.trim() || t("runs.noOutput");
 
   return (
-    <div className="rounded-md border bg-white">
+    <div className="rounded-md border bg-card">
       <div className="border-b px-4 py-2 text-xs font-medium uppercase text-muted-foreground">
         {label}
       </div>
       <pre
         className={
           tone === "danger"
-            ? "max-h-[260px] overflow-auto p-4 font-mono text-xs text-destructive"
-            : "max-h-[260px] overflow-auto p-4 font-mono text-xs"
+            ? "max-h-[260px] overflow-auto bg-background p-3 font-mono text-xs text-destructive"
+            : "max-h-[260px] overflow-auto bg-background p-3 font-mono text-xs"
         }
       >
         {content}

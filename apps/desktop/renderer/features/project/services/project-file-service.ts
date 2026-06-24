@@ -1,9 +1,20 @@
 import { invokeCommand } from "@/core/tauri/tauri-client";
-import type { projectFile } from "@/features/project/types/project";
+import { readGithubProjectFile } from "@/features/project/services/github-project-service";
+import type { project, projectFile } from "@/features/project/types/project";
 
 export async function readProjectFile(args: {
   filePath: string;
-  projectPath: string;
+  project: project;
 }): Promise<projectFile> {
-  return invokeCommand<projectFile>("read_project_file", args);
+  if (args.project.source === "github") {
+    return readGithubProjectFile({
+      filePath: args.filePath,
+      project: args.project
+    });
+  }
+
+  return invokeCommand<projectFile>("read_project_file", {
+    filePath: args.filePath,
+    projectPath: args.project.path
+  });
 }

@@ -10,9 +10,7 @@ export const resources = {
       nav: {
         dashboard: "Dashboard",
         login: "GitHub Login",
-        runs: "Runs",
-        knowledge: "Knowledge",
-        localMemory: "Local Memory",
+        currentProject: "Current Project",
         openProjectFirst: "Open a project first"
       },
       runtime: {
@@ -22,9 +20,24 @@ export const resources = {
       auth: {
         title: "GitHub Login",
         description: "Sign in with GitHub to sync Kivra memory through Supabase.",
+        contextLabel: "Developer memory starts here",
+        heroTitle: "Capture the work your terminal forgets.",
+        heroDescription: "Kivra keeps project structure, command runs, errors, and resolution notes tied to your GitHub identity before anything is stored.",
+        buildDetail: "Register local projects and run commands from one focused workspace.",
+        failDetail: "Keep stdout, stderr, exit codes, and parsed errors together.",
+        rememberDetail: "Save fixes and reuse them when the same failure appears again.",
         githubLogin: "Continue with GitHub",
+        githubLoginPending: "Opening GitHub...",
+        progressTitle: "GitHub login in progress",
+        progressPreparing: "Preparing a secure GitHub OAuth request.",
+        progressGithub: "Approve the GitHub window when it opens.",
+        progressSession: "Kivra will verify your session after the redirect.",
+        oauthOnly: "No email or password login. GitHub identity scopes your workspace memory.",
+        loading: "Checking GitHub session...",
+        redirecting: "Signed in. Opening your dashboard...",
         signedIn: "Signed in with GitHub",
         signOut: "Sign out",
+        profile: "GitHub Profile",
         configRequired: "Supabase configuration is required.",
         configRequiredDetail: "Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in apps/desktop/.env before using GitHub OAuth."
       },
@@ -45,6 +58,15 @@ export const resources = {
         framework: "Framework",
         packageManager: "Package Manager",
         branch: "Branch",
+        source: "Source",
+        localSource: "Local",
+        githubSource: "GitHub",
+        loadGithubProjects: "Load GitHub Projects",
+        loadingGithubProjects: "Loading GitHub repositories...",
+        githubImportDetail: "Import repositories as remote memory projects.",
+        githubTokenRequired: "GitHub authorization is required. Sign in again to refresh OAuth access.",
+        githubProjectsEmpty: "No GitHub repositories found.",
+        githubRunDisabled: "Remote GitHub projects can be explored and remembered, but commands run only in local projects.",
         loading: "Loading project...",
         notFound: "Project not found.",
         package: "Package",
@@ -55,13 +77,24 @@ export const resources = {
           knowledge: "Knowledge",
           settings: "Settings"
         },
+        tabDescriptions: {
+          explorer: "Browse files and inspect the selected source file.",
+          runs: "Run project commands and review captured stdout, stderr, and exit codes.",
+          errors: "Review parsed failures from command runs and attach resolution notes.",
+          knowledge: "Search saved resolution notes for this project.",
+          settings: "Project memory preferences will live here."
+        },
         settingsMessage: "Project settings will store memory preferences for this project."
       },
       explorer: {
         selectFile: "Select a file to inspect.",
         loadingFile: "Loading file...",
         fileReadFailed: "Unable to read file.",
-        truncated: "Large file truncated for inspection."
+        truncated: "Large file truncated for inspection.",
+        viewModes: {
+          code: "Code",
+          preview: "Preview"
+        }
       },
       runs: {
         command: "Command",
@@ -69,7 +102,9 @@ export const resources = {
         duration: "Duration",
         timestamp: "Timestamp",
         empty: "No command runs captured in this session.",
+        emptyDetail: "Run a command from the command bar above. Failed runs can create errors for the Errors tab.",
         run: "Run",
+        running: "Running...",
         output: "Output",
         stdout: "stdout",
         stderr: "stderr",
@@ -88,7 +123,8 @@ export const resources = {
         open: "OPEN",
         resolved: "RESOLVED",
         rawOutput: "Raw output",
-        empty: "No detected errors yet."
+        empty: "No detected errors yet.",
+        emptyDetail: "Run a command first. When Kivra detects build or runtime errors, they appear here for review."
       },
       notes: {
         placeholder: "Cause, resolution, and reusable debugging notes",
@@ -98,6 +134,7 @@ export const resources = {
       knowledge: {
         searchPlaceholder: "Search error messages, file paths, and notes",
         empty: "No saved knowledge yet.",
+        emptyDetail: "Save a resolution note from the Errors tab. It will become searchable here.",
         unknownError: "Unknown error"
       }
     }
@@ -110,9 +147,7 @@ export const resources = {
       nav: {
         dashboard: "대시보드",
         login: "GitHub 로그인",
-        runs: "실행 기록",
-        knowledge: "지식",
-        localMemory: "로컬 메모리",
+        currentProject: "현재 프로젝트",
         openProjectFirst: "먼저 프로젝트를 열어주세요"
       },
       runtime: {
@@ -122,9 +157,24 @@ export const resources = {
       auth: {
         title: "GitHub 로그인",
         description: "GitHub로 로그인해 Kivra 메모리를 Supabase와 동기화합니다.",
+        contextLabel: "개발자 메모리는 여기서 시작됩니다",
+        heroTitle: "터미널이 잊는 작업을 Kivra가 기억합니다.",
+        heroDescription: "Kivra는 프로젝트 구조, 명령 실행, 에러, 해결 노트를 GitHub 계정 기준으로 안전하게 저장합니다.",
+        buildDetail: "로컬 프로젝트를 등록하고 한 작업 공간에서 명령을 실행합니다.",
+        failDetail: "stdout, stderr, exit code, 파싱된 에러를 함께 보관합니다.",
+        rememberDetail: "해결 방법을 저장하고 같은 실패가 다시 나타날 때 재사용합니다.",
         githubLogin: "GitHub로 계속하기",
+        githubLoginPending: "GitHub를 여는 중...",
+        progressTitle: "GitHub 로그인 진행 중",
+        progressPreparing: "안전한 GitHub OAuth 요청을 준비합니다.",
+        progressGithub: "GitHub 창이 열리면 승인을 완료하세요.",
+        progressSession: "리다이렉트 후 Kivra가 세션을 확인합니다.",
+        oauthOnly: "이메일/비밀번호 로그인 없이 GitHub 계정으로 작업 메모리를 구분합니다.",
+        loading: "GitHub 세션을 확인하는 중...",
+        redirecting: "로그인되었습니다. 대시보드로 이동합니다...",
         signedIn: "GitHub로 로그인됨",
         signOut: "로그아웃",
+        profile: "GitHub 프로필",
         configRequired: "Supabase 설정이 필요합니다.",
         configRequiredDetail: "GitHub OAuth를 사용하려면 apps/desktop/.env에 VITE_SUPABASE_URL과 VITE_SUPABASE_ANON_KEY를 설정하세요."
       },
@@ -145,6 +195,15 @@ export const resources = {
         framework: "프레임워크",
         packageManager: "패키지 매니저",
         branch: "브랜치",
+        source: "소스",
+        localSource: "로컬",
+        githubSource: "GitHub",
+        loadGithubProjects: "GitHub 프로젝트 불러오기",
+        loadingGithubProjects: "GitHub 저장소를 불러오는 중...",
+        githubImportDetail: "저장소를 원격 메모리 프로젝트로 등록합니다.",
+        githubTokenRequired: "GitHub 권한이 필요합니다. OAuth 접근 권한을 갱신하려면 다시 로그인하세요.",
+        githubProjectsEmpty: "불러올 GitHub 저장소가 없습니다.",
+        githubRunDisabled: "GitHub 원격 프로젝트는 탐색과 메모리 저장은 가능하지만, 명령 실행은 로컬 프로젝트에서만 가능합니다.",
         loading: "프로젝트를 불러오는 중...",
         notFound: "프로젝트를 찾을 수 없습니다.",
         package: "패키지",
@@ -155,13 +214,24 @@ export const resources = {
           knowledge: "지식",
           settings: "설정"
         },
+        tabDescriptions: {
+          explorer: "파일을 탐색하고 선택한 소스 파일을 확인합니다.",
+          runs: "프로젝트 명령을 실행하고 stdout, stderr, exit code를 확인합니다.",
+          errors: "명령 실행에서 감지된 실패를 검토하고 해결 노트를 붙입니다.",
+          knowledge: "이 프로젝트에 저장한 해결 노트를 검색합니다.",
+          settings: "프로젝트 메모리 설정이 여기에 들어갑니다."
+        },
         settingsMessage: "프로젝트 설정에는 이 프로젝트의 메모리 선호값이 저장됩니다."
       },
       explorer: {
         selectFile: "내용을 보려면 파일을 선택하세요.",
         loadingFile: "파일을 불러오는 중...",
         fileReadFailed: "파일을 읽을 수 없습니다.",
-        truncated: "큰 파일이라 일부만 표시합니다."
+        truncated: "큰 파일이라 일부만 표시합니다.",
+        viewModes: {
+          code: "코드",
+          preview: "프리뷰"
+        }
       },
       runs: {
         command: "명령어",
@@ -169,7 +239,9 @@ export const resources = {
         duration: "소요 시간",
         timestamp: "시간",
         empty: "이 세션에서 캡처한 명령 실행이 없습니다.",
+        emptyDetail: "위 명령 입력창에서 먼저 실행하세요. 실패한 실행은 에러 탭의 항목으로 이어질 수 있습니다.",
         run: "실행",
+        running: "실행 중...",
         output: "출력",
         stdout: "stdout",
         stderr: "stderr",
@@ -188,7 +260,8 @@ export const resources = {
         open: "열림",
         resolved: "해결됨",
         rawOutput: "원본 출력",
-        empty: "감지된 에러가 없습니다."
+        empty: "감지된 에러가 없습니다.",
+        emptyDetail: "먼저 명령을 실행하세요. Kivra가 빌드나 런타임 에러를 감지하면 여기에 표시합니다."
       },
       notes: {
         placeholder: "원인, 해결 방법, 재사용할 디버깅 메모",
@@ -198,6 +271,7 @@ export const resources = {
       knowledge: {
         searchPlaceholder: "에러 메시지, 파일 경로, 노트 검색",
         empty: "아직 저장된 지식이 없습니다.",
+        emptyDetail: "에러 탭에서 해결 노트를 저장하면 여기에서 검색할 수 있습니다.",
         unknownError: "알 수 없는 에러"
       }
     }

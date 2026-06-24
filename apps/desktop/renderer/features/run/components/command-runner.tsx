@@ -1,4 +1,4 @@
-import { Play } from "lucide-react";
+import { Loader2, Play } from "lucide-react";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -43,18 +43,27 @@ export function CommandRunner({
         <input
           value={command}
           onChange={(event) => setCommand(event.target.value)}
-          className="h-9 min-w-[360px] rounded-md border bg-white px-3 font-mono text-sm outline-none focus:border-primary disabled:bg-muted"
-          disabled={!canUseNativeActions}
+          className="h-8 min-w-[360px] rounded-md border bg-background px-3 font-mono text-xs outline-none focus:border-foreground disabled:bg-muted"
+          disabled={!canUseNativeActions || runCommand.isPending}
         />
         <Button
           type="submit"
           variant="primary"
           disabled={runCommand.isPending || !canUseNativeActions}
         >
-          <Play className="h-4 w-4" />
-          {t("runs.run")}
+          {runCommand.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Play className="h-4 w-4" />
+          )}
+          {runCommand.isPending ? t("runs.running") : t("runs.run")}
         </Button>
       </div>
+      {runCommand.isPending && (
+        <p className="font-mono text-xs text-muted-foreground">
+          {command.trim()}
+        </p>
+      )}
       {!canUseNativeActions && (
         <p className="text-xs text-muted-foreground">
           {t("runtime.desktopRequiredDetail")}

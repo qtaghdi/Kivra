@@ -9,10 +9,10 @@ type buttonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variantClassName = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-  secondary: "bg-muted text-foreground hover:bg-muted/80",
-  ghost: "bg-transparent text-foreground hover:bg-muted",
-  danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+  primary: "border-primary bg-primary text-primary-foreground hover:bg-primary/90",
+  secondary: "border-border bg-muted text-foreground hover:bg-muted/80",
+  ghost: "border-transparent bg-transparent text-foreground hover:bg-muted",
+  danger: "border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90"
 };
 
 const sizeClassName = {
@@ -31,7 +31,7 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-md border border-transparent font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex items-center justify-center gap-2 rounded-md border font-medium transition disabled:cursor-not-allowed disabled:opacity-50",
         variantClassName[variant],
         sizeClassName[size],
         className

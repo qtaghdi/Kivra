@@ -284,12 +284,12 @@ Core Layer
 Contains application-wide concerns.
 
 renderer/core
-├─ auth
-├─ database
-├─ tauri
-├─ router
+├─ config
+├─ i18n
 ├─ providers
-└─ config
+├─ router
+├─ supabase
+└─ tauri
 
 ⸻
 
@@ -298,11 +298,11 @@ Feature Layer
 Each feature owns its logic.
 
 renderer/features
+├─ auth
 ├─ project
 ├─ run
 ├─ error
-├─ docs
-└─ settings
+└─ docs
 
 ⸻
 

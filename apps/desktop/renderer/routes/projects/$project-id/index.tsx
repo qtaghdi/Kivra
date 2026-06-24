@@ -74,28 +74,38 @@ export function ProjectRoute() {
       transition={{ duration: 0.22, ease: "easeOut" }}
       className="flex h-screen flex-col overflow-hidden"
     >
-      <header className="border-b bg-white px-6 py-4">
+      <header className="border-b bg-card px-4 py-3">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">{project.data.name}</h1>
-            <p className="text-sm text-muted-foreground">{project.data.path}</p>
+            <h1 className="text-lg font-semibold">{project.data.name}</h1>
+            <p className="font-mono text-xs text-muted-foreground">
+              {project.data.path}
+            </p>
           </div>
-          <div className="grid grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-5 gap-2 text-xs">
             <Metadata label={t("project.runtime")} value={project.data.runtime} />
             <Metadata label={t("project.framework")} value={project.data.framework} />
             <Metadata label={t("project.package")} value={project.data.packageManager} />
             <Metadata label={t("project.branch")} value={project.data.branch} />
+            <Metadata
+              label={t("project.source")}
+              value={
+                project.data.source === "github"
+                  ? t("project.githubSource")
+                  : t("project.localSource")
+              }
+            />
           </div>
         </div>
-        <div className="mt-4 flex items-center justify-between gap-4">
-          <div className="flex rounded-md border bg-muted p-1">
+        <div className="mt-3 flex items-center justify-between gap-4">
+          <div className="flex rounded-md border bg-background p-1">
             {tabs.map((tab) => (
               <button
                 key={tab}
                 type="button"
                 className={cn(
-                  "h-8 rounded px-3 text-sm capitalize",
-                  activeTab === tab && "bg-white shadow-sm"
+                  "h-7 rounded px-2 text-xs capitalize text-muted-foreground",
+                  activeTab === tab && "bg-muted text-foreground"
                 )}
                 onClick={() => handleTabChange(tab)}
               >
@@ -103,19 +113,33 @@ export function ProjectRoute() {
               </button>
             ))}
           </div>
-          <CommandRunner
-            projectId={project.data.id}
-            projectPath={project.data.path}
-            onRunComplete={(result) => {
-              addRun(result);
-              setSelectedRun(result);
-              void navigate({ search: { tab: "runs" } });
-            }}
-          />
+          {project.data.source === "local" ? (
+            <CommandRunner
+              projectId={project.data.id}
+              projectPath={project.data.path}
+              onRunComplete={(result) => {
+                addRun(result);
+                setSelectedRun(result);
+                void navigate({ search: { tab: "runs" } });
+              }}
+            />
+          ) : (
+            <div className="rounded-md border bg-background px-3 py-2 text-xs text-muted-foreground">
+              {t("project.githubRunDisabled")}
+            </div>
+          )}
         </div>
       </header>
 
-      <section className="min-h-0 flex-1 overflow-auto p-6">
+      <section className="min-h-0 flex-1 overflow-auto p-4">
+        <div className="mb-3 rounded-md border bg-card px-3 py-2">
+          <div className="text-xs font-medium">
+            {t(`project.tabs.${activeTab}`)}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {t(`project.tabDescriptions.${activeTab}`)}
+          </div>
+        </div>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -134,7 +158,7 @@ export function ProjectRoute() {
                 />
                 <ProjectFileViewer
                   filePath={selectedFilePath}
-                  projectPath={project.data.path}
+                  project={project.data}
                 />
               </div>
             )}
@@ -173,7 +197,7 @@ export function ProjectRoute() {
               />
             )}
             {activeTab === "settings" && (
-              <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
+              <div className="rounded-md border bg-card p-4 text-sm text-muted-foreground">
                 {t("project.settingsMessage")}
               </div>
             )}
@@ -191,9 +215,9 @@ type metadataProps = {
 
 function Metadata({ label, value }: metadataProps) {
   return (
-    <div className="min-w-[120px] rounded-md border bg-muted px-3 py-2">
+    <div className="min-w-[110px] rounded-md border bg-background px-3 py-2">
       <div className="text-muted-foreground">{label}</div>
-      <div className="mt-1 truncate font-medium">{value}</div>
+      <div className="mt-1 truncate font-mono">{value}</div>
     </div>
   );
 }

@@ -29,7 +29,7 @@ function ProjectNodeRow({
       <button
         type="button"
         className={cn(
-          "flex h-8 w-full items-center gap-1 border-b px-2 text-left text-sm transition hover:bg-muted",
+          "flex h-7 w-full items-center gap-1 border-b px-2 text-left text-xs transition hover:bg-muted",
           selectedFilePath === node.path && "bg-muted"
         )}
         style={{ paddingLeft: `${depth * 16 + 8}px` }}
@@ -51,7 +51,7 @@ function ProjectNodeRow({
           <span className="h-6 w-6" />
         )}
         {node.type === "folder" ? (
-          <Folder className="h-4 w-4 text-primary" />
+          <Folder className="h-4 w-4 text-muted-foreground" />
         ) : (
           <File className="h-4 w-4 text-muted-foreground" />
         )}
@@ -77,7 +77,7 @@ export function ProjectExplorer({
   tree
 }: projectExplorerProps) {
   return (
-    <div className="h-full overflow-auto rounded-md border bg-white">
+    <div className="h-full overflow-auto rounded-md border bg-card">
       <ProjectNodeRow
         node={tree}
         depth={0}

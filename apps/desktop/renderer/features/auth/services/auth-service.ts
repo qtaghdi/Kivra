@@ -49,13 +49,27 @@ export async function signInWithGithub() {
   const { error } = await supabase.auth.signInWithOAuth({
     provider: "github",
     options: {
-      redirectTo: window.location.origin
+      redirectTo: `${window.location.origin}/login`
     }
   });
 
   if (error) {
     throw error;
   }
+}
+
+export async function getGithubAccessToken(): Promise<string | null> {
+  if (!supabase) {
+    return null;
+  }
+
+  const { data, error } = await supabase.auth.getSession();
+
+  if (error || !data.session?.provider_token) {
+    return null;
+  }
+
+  return data.session.provider_token;
 }
 
 export async function signOut() {

@@ -5,6 +5,7 @@ import {
   Outlet
 } from "@tanstack/react-router";
 
+import { AuthGate } from "@/features/auth";
 import { AppShell } from "@/shared/ui/app-shell";
 import { DashboardRoute } from "@/routes/index";
 import { LoginRoute } from "@/routes/login/index";
@@ -16,9 +17,11 @@ type projectTab = (typeof projectTabs)[number];
 
 const rootRoute = createRootRoute({
   component: () => (
-    <AppShell>
-      <Outlet />
-    </AppShell>
+    <AuthGate>
+      <AppShell>
+        <Outlet />
+      </AppShell>
+    </AuthGate>
   )
 });
 

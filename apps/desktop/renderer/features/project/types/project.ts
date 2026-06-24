@@ -15,6 +15,8 @@ export type projectMetadata = {
   repositoryUrl: string | null;
 };
 
+export type projectSource = "local" | "github";
+
 export type project = {
   id: string;
   name: string;
@@ -25,6 +27,7 @@ export type project = {
   branch: string;
   repositoryUrl: string | null;
   createdAt: string;
+  source: projectSource;
   tree: projectNode;
 };
 

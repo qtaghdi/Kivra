@@ -69,7 +69,7 @@ export function KnowledgeList({
 
   return (
     <div className="space-y-3">
-      <div className="flex h-9 items-center gap-2 rounded-md border bg-white px-3">
+      <div className="flex h-8 items-center gap-2 rounded-md border bg-background px-3">
         <Search className="h-4 w-4 text-muted-foreground" />
         <input
           value={query}
@@ -79,13 +79,16 @@ export function KnowledgeList({
         />
       </div>
       {filteredItems.length === 0 ? (
-        <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
-          {t("knowledge.empty")}
+        <div className="rounded-md border bg-card p-4">
+          <div className="text-sm font-medium">{t("knowledge.empty")}</div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("knowledge.emptyDetail")}
+          </p>
         </div>
       ) : (
         <div className="space-y-2">
           {filteredItems.map((item) => (
-            <article key={item.note.id} className="rounded-md border bg-white p-4">
+            <article key={item.note.id} className="rounded-md border bg-card p-3">
               <div className="text-sm font-medium">
                 {item.error?.message ?? t("knowledge.unknownError")}
               </div>

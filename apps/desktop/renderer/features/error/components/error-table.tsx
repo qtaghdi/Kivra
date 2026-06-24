@@ -20,8 +20,11 @@ export function ErrorTable({
 
   if (errors.length === 0) {
     return (
-      <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
-        {t("errors.empty")}
+      <div className="rounded-md border bg-card p-4">
+        <div className="text-sm font-medium">{t("errors.empty")}</div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("errors.emptyDetail")}
+        </p>
       </div>
     );
   }
@@ -31,15 +34,15 @@ export function ErrorTable({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="overflow-hidden rounded-md border bg-white shadow-sm"
+      className="overflow-hidden rounded-md border bg-card"
     >
       <table className="w-full border-collapse text-left text-sm">
         <thead className="bg-muted text-xs uppercase text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 font-medium">{t("errors.message")}</th>
-            <th className="px-4 py-3 font-medium">{t("errors.filePath")}</th>
-            <th className="px-4 py-3 font-medium">{t("errors.line")}</th>
-            <th className="px-4 py-3 font-medium">{t("errors.status")}</th>
+            <th className="px-3 py-2 font-medium">{t("errors.message")}</th>
+            <th className="px-3 py-2 font-medium">{t("errors.filePath")}</th>
+            <th className="px-3 py-2 font-medium">{t("errors.line")}</th>
+            <th className="px-3 py-2 font-medium">{t("errors.status")}</th>
           </tr>
         </thead>
         <tbody>
@@ -54,22 +57,22 @@ export function ErrorTable({
                 transition={{ duration: 0.18, delay: index * 0.025, ease: "easeOut" }}
                 className={
                   selectedError?.id === error.id
-                    ? "cursor-pointer border-t bg-muted"
-                    : "cursor-pointer border-t transition hover:bg-muted/70"
+                    ? "h-10 cursor-pointer border-t bg-muted"
+                    : "h-10 cursor-pointer border-t transition hover:bg-muted"
                 }
                 onClick={() => onSelectError(error)}
               >
-                <td className="max-w-[420px] px-4 py-3">{error.message}</td>
-                <td className="px-4 py-3 font-mono text-xs">
+                <td className="max-w-[420px] px-3 py-2">{error.message}</td>
+                <td className="px-3 py-2 font-mono text-xs">
                   {error.filePath ?? t("errors.rawOutput")}
                 </td>
-                <td className="px-4 py-3">{error.lineNumber ?? "-"}</td>
-                <td className="px-4 py-3">
+                <td className="px-3 py-2">{error.lineNumber ?? "-"}</td>
+                <td className="px-3 py-2">
                   <span
                     className={
                       isResolved
-                        ? "rounded bg-emerald-100 px-2 py-1 text-xs font-medium text-emerald-700"
-                        : "rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-700"
+                        ? "rounded border border-border bg-muted px-2 py-1 text-xs font-medium text-muted-foreground"
+                        : "rounded border border-destructive/40 bg-destructive/10 px-2 py-1 text-xs font-medium text-destructive"
                     }
                   >
                     {isResolved ? t("errors.resolved") : t("errors.open")}

@@ -1,4 +1,5 @@
-import { Github, LogOut } from "lucide-react";
+import { Github, Loader2, LogOut } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { hasSupabaseConfig } from "@/core/config/env";
@@ -15,10 +16,21 @@ export function GithubLoginPanel() {
   const githubLogin = useGithubLogin();
   const signOut = useSignOut();
   const isConfigured = hasSupabaseConfig();
+  const [loginStarted, setLoginStarted] = useState(false);
+  const isLoginInProgress = loginStarted || githubLogin.isPending;
+
+  function handleGithubLogin() {
+    setLoginStarted(true);
+    githubLogin.mutate(undefined, {
+      onError: () => {
+        setLoginStarted(false);
+      }
+    });
+  }
 
   if (!isConfigured) {
     return (
-      <div className="rounded-md border bg-white p-6">
+      <div className="rounded-md border bg-card p-4">
         <div className="text-sm font-medium">{t("auth.configRequired")}</div>
         <p className="mt-2 text-sm text-muted-foreground">
           {t("auth.configRequiredDetail")}
@@ -27,15 +39,26 @@ export function GithubLoginPanel() {
     );
   }
 
+  if (authUser.isLoading) {
+    return (
+      <div className="rounded-md border bg-card p-4">
+        <div className="text-sm font-medium">{t("auth.loading")}</div>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t("auth.description")}
+        </p>
+      </div>
+    );
+  }
+
   if (authUser.data) {
     return (
-      <div className="rounded-md border bg-white p-6">
+      <div className="rounded-md border bg-card p-4">
         <div className="flex items-center gap-3">
           {authUser.data.avatarUrl && (
             <img
               src={authUser.data.avatarUrl}
               alt=""
-              className="h-10 w-10 rounded-full"
+              className="h-8 w-8 rounded-md"
             />
           )}
           <div>
@@ -58,19 +81,36 @@ export function GithubLoginPanel() {
   }
 
   return (
-    <div className="rounded-md border bg-white p-6">
+    <div className="rounded-md border bg-card p-4">
       <div className="text-sm font-medium">{t("auth.title")}</div>
       <p className="mt-2 text-sm text-muted-foreground">{t("auth.description")}</p>
       <Button
         type="button"
         variant="primary"
         className="mt-4"
-        onClick={() => githubLogin.mutate()}
-        disabled={githubLogin.isPending}
+        onClick={handleGithubLogin}
+        disabled={isLoginInProgress}
       >
-        <Github className="h-4 w-4" />
-        {t("auth.githubLogin")}
+        {isLoginInProgress ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Github className="h-4 w-4" />
+        )}
+        {isLoginInProgress ? t("auth.githubLoginPending") : t("auth.githubLogin")}
       </Button>
+      {isLoginInProgress && (
+        <div className="mt-4 rounded-md border border-primary/30 bg-primary/5 p-3">
+          <div className="flex items-center gap-2 text-xs font-medium text-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+            {t("auth.progressTitle")}
+          </div>
+          <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
+            <li>{t("auth.progressPreparing")}</li>
+            <li>{t("auth.progressGithub")}</li>
+            <li>{t("auth.progressSession")}</li>
+          </ol>
+        </div>
+      )}
       {githubLogin.error instanceof Error && (
         <p className="mt-3 text-xs text-destructive">
           {githubLogin.error.message === "SUPABASE_CONFIG_REQUIRED"

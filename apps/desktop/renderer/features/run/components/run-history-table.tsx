@@ -19,8 +19,11 @@ export function RunHistoryTable({
 
   if (runs.length === 0) {
     return (
-      <div className="rounded-md border bg-white p-6 text-sm text-muted-foreground">
-        {t("runs.empty")}
+      <div className="rounded-md border bg-card p-4">
+        <div className="text-sm font-medium">{t("runs.empty")}</div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t("runs.emptyDetail")}
+        </p>
       </div>
     );
   }
@@ -30,15 +33,15 @@ export function RunHistoryTable({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="overflow-hidden rounded-md border bg-white shadow-sm"
+      className="overflow-hidden rounded-md border bg-card"
     >
       <table className="w-full border-collapse text-left text-sm">
         <thead className="bg-muted text-xs uppercase text-muted-foreground">
           <tr>
-            <th className="px-4 py-3 font-medium">{t("runs.command")}</th>
-            <th className="px-4 py-3 font-medium">{t("runs.status")}</th>
-            <th className="px-4 py-3 font-medium">{t("runs.duration")}</th>
-            <th className="px-4 py-3 font-medium">{t("runs.timestamp")}</th>
+            <th className="px-3 py-2 font-medium">{t("runs.command")}</th>
+            <th className="px-3 py-2 font-medium">{t("runs.status")}</th>
+            <th className="px-3 py-2 font-medium">{t("runs.duration")}</th>
+            <th className="px-3 py-2 font-medium">{t("runs.timestamp")}</th>
           </tr>
         </thead>
         <tbody>
@@ -49,17 +52,17 @@ export function RunHistoryTable({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: index * 0.025, ease: "easeOut" }}
               className={cn(
-                "cursor-pointer border-t transition hover:bg-muted/70",
+                "h-10 cursor-pointer border-t transition hover:bg-muted",
                 selectedRun?.createdAt === run.createdAt &&
                   selectedRun.command === run.command &&
                   "bg-muted"
               )}
               onClick={() => onSelectRun(run)}
             >
-              <td className="px-4 py-3 font-mono text-xs">{run.command}</td>
-              <td className="px-4 py-3">{run.status}</td>
-              <td className="px-4 py-3">{run.duration} ms</td>
-              <td className="px-4 py-3">{new Date(run.createdAt).toLocaleString()}</td>
+              <td className="px-3 py-2 font-mono text-xs">{run.command}</td>
+              <td className="px-3 py-2">{run.status}</td>
+              <td className="px-3 py-2">{run.duration} ms</td>
+              <td className="px-3 py-2">{new Date(run.createdAt).toLocaleString()}</td>
             </motion.tr>
           ))}
         </tbody>

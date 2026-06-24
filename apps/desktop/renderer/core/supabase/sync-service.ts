@@ -190,6 +190,7 @@ export async function fetchSyncedProjects(): Promise<project[]> {
     branch: item.branch,
     repositoryUrl: item.repository_url,
     createdAt: item.created_at,
+    source: item.repository_url ? "github" : "local",
     tree: {
       id: item.id,
       name: item.name,
