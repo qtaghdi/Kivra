@@ -138,6 +138,42 @@ export const resources = {
           code: "Code",
           nodes: "Nodes",
           preview: "Preview"
+        },
+        nodeView: {
+          codePreview: "Code Preview",
+          connections: "Connections",
+          controls: {
+            collapseAll: "Collapse all",
+            closeInspector: "Close inspector",
+            expandAll: "Expand all",
+            fitView: "Fit view",
+            openInspector: "Open inspector",
+            resetLayout: "Reset layout",
+            zoomIn: "Zoom in",
+            zoomOut: "Zoom out"
+          },
+          detail: "Detail",
+          fileOverview: "File overview",
+          groups: {
+            constants: "Constants",
+            declarations: "Declarations",
+            exports: "Exports",
+            functions: "Functions",
+            hooks: "Hooks",
+            imports: "Imports"
+          },
+          hiddenPreview: "Hidden nodes are collapsed for readability.",
+          inspectorTitle: "Code node inspector",
+          largeFile: "Large file detected. Start with the summary, then expand only the group you need.",
+          line: "Line {{line}}",
+          more: "+{{count}} more",
+          noConnections: "No visible connections.",
+          outline: "Outline",
+          parsedNodes: "{{count}} parsed nodes",
+          pinGroup: "Pin group",
+          related: "related",
+          searchPlaceholder: "Search nodes",
+          unpinGroup: "Unpin group"
         }
       },
       runs: {
@@ -370,6 +406,42 @@ export const resources = {
           code: "코드",
           nodes: "노드",
           preview: "프리뷰"
+        },
+        nodeView: {
+          codePreview: "코드 미리보기",
+          connections: "연결",
+          controls: {
+            collapseAll: "모두 접기",
+            closeInspector: "검사기 닫기",
+            expandAll: "모두 펼치기",
+            fitView: "화면에 맞추기",
+            openInspector: "검사기 열기",
+            resetLayout: "레이아웃 초기화",
+            zoomIn: "확대",
+            zoomOut: "축소"
+          },
+          detail: "상세",
+          fileOverview: "파일 개요",
+          groups: {
+            constants: "상수",
+            declarations: "선언",
+            exports: "내보내기",
+            functions: "함수",
+            hooks: "훅",
+            imports: "가져오기"
+          },
+          hiddenPreview: "가독성을 위해 숨겨진 노드는 접혀 있습니다.",
+          inspectorTitle: "코드 노드 검사기",
+          largeFile: "큰 파일입니다. 먼저 요약을 보고 필요한 그룹만 펼쳐보세요.",
+          line: "{{line}}라인",
+          more: "+{{count}}개 더",
+          noConnections: "표시할 연결이 없습니다.",
+          outline: "아웃라인",
+          parsedNodes: "{{count}}개 노드 파싱됨",
+          pinGroup: "그룹 고정",
+          related: "연결됨",
+          searchPlaceholder: "노드 검색",
+          unpinGroup: "그룹 고정 해제"
         }
       },
       runs: {
