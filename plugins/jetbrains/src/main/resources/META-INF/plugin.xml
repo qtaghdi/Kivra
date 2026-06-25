@@ -1,0 +1,11 @@
+<idea-plugin>
+  <id>ai.kivra.jetbrains</id>
+  <name>Kivra</name>
+  <vendor>Kivra</vendor>
+
+  <depends>com.intellij.modules.platform</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <postStartupActivity implementation="ai.kivra.jetbrains.KivraStartupActivity"/>
+  </extensions>
+</idea-plugin>

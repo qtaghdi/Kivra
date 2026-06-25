@@ -117,6 +117,13 @@ struct CapturedRunStart {
 }
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CapturedRunEnd {
+    exit_code: Option<i32>,
+    duration_ms: Option<u128>,
+}
+
+#[derive(Debug, Deserialize)]
 struct CapturedRunEvent {
     stream: String,
     data: String,
@@ -587,6 +594,9 @@ fn read_captured_run(run_path: &Path) -> Result<CapturedRunResult, KivraError> {
         .map_err(|error| KivraError::Filesystem(error.to_string()))?;
     let start = serde_json::from_str::<CapturedRunStart>(&start_content)
         .map_err(|error| KivraError::Filesystem(error.to_string()))?;
+    let end = fs::read_to_string(run_path.join("end.json"))
+        .ok()
+        .and_then(|content| serde_json::from_str::<CapturedRunEnd>(&content).ok());
     let events_content = fs::read_to_string(run_path.join("events.jsonl")).unwrap_or_default();
     let mut stdout = String::new();
     let mut stderr = String::new();
@@ -616,10 +626,15 @@ fn read_captured_run(run_path: &Path) -> Result<CapturedRunResult, KivraError> {
     } else {
         Vec::new()
     };
-    let status = if errors.is_empty() {
-        "SUCCESS"
-    } else {
+    let exit_code = end.as_ref().and_then(|end| end.exit_code);
+    let duration = end
+        .as_ref()
+        .and_then(|end| end.duration_ms)
+        .unwrap_or_default();
+    let status = if exit_code.is_some_and(|code| code != 0) || !errors.is_empty() {
         "FAILED"
+    } else {
+        "SUCCESS"
     }
     .to_string();
 
@@ -628,10 +643,10 @@ fn read_captured_run(run_path: &Path) -> Result<CapturedRunResult, KivraError> {
         project_path: start.project_path,
         command: start.command,
         status,
-        duration: 0,
+        duration,
         stdout,
         stderr,
-        exit_code: None,
+        exit_code,
         errors,
         created_at: start.started_at,
     })

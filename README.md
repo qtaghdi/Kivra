@@ -87,3 +87,19 @@ Check the current capture status with:
 ```bash
 pnpm trace:diagnose /path/to/project
 ```
+
+## JetBrains Run/Debug Capture
+
+Kivra also includes a JetBrains IDE plugin for Run/Debug configurations. It
+writes the same captured-run files under `~/.kivra/captured-runs`, so the
+desktop app can display IDE-run logs without the command being launched from a
+terminal.
+
+Build the local plugin ZIP:
+
+```bash
+pnpm jetbrains:build
+```
+
+Install the ZIP from `plugins/jetbrains/build/distributions` in a JetBrains IDE.
+The plugin only captures projects already registered in Kivra.

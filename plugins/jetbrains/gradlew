@@ -1,0 +1,21 @@
+#!/usr/bin/env sh
+set -eu
+
+GRADLE_VERSION="${GRADLE_VERSION:-9.0.0}"
+GRADLE_USER_HOME="${GRADLE_USER_HOME:-"$HOME/.gradle"}"
+GRADLE_CACHE_DIR="$GRADLE_USER_HOME/kivra-wrapper"
+GRADLE_HOME="$GRADLE_CACHE_DIR/gradle-$GRADLE_VERSION"
+GRADLE_ZIP="$GRADLE_CACHE_DIR/gradle-$GRADLE_VERSION-bin.zip"
+GRADLE_URL="https://services.gradle.org/distributions/gradle-$GRADLE_VERSION-bin.zip"
+
+if [ ! -x "$GRADLE_HOME/bin/gradle" ]; then
+  mkdir -p "$GRADLE_CACHE_DIR"
+
+  if [ ! -f "$GRADLE_ZIP" ]; then
+    curl -fL "$GRADLE_URL" -o "$GRADLE_ZIP"
+  fi
+
+  unzip -q "$GRADLE_ZIP" -d "$GRADLE_CACHE_DIR"
+fi
+
+exec "$GRADLE_HOME/bin/gradle" "$@"

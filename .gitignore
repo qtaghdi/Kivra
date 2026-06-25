@@ -4,6 +4,9 @@ dist/
 apps/*/dist/
 apps/*/native/target/
 apps/*/native/gen/
+plugins/*/.gradle/
+plugins/*/.intellijPlatform/
+plugins/*/build/
 .idea/
 
 .DS_Store
