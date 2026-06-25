@@ -10,6 +10,7 @@ import { AppShell } from "@/shared/ui/app-shell";
 import { DashboardRoute } from "@/routes/index";
 import { LoginRoute } from "@/routes/login/index";
 import { ProjectRoute } from "@/routes/projects/$project-id/index";
+import { SettingsRoute } from "@/routes/settings/index";
 
 const projectTabs = ["explorer", "runs", "errors", "knowledge", "settings"] as const;
 
@@ -37,6 +38,12 @@ const loginRoute = createRoute({
   component: LoginRoute
 });
 
+const settingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/settings",
+  component: SettingsRoute
+});
+
 const projectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects/$projectId",
@@ -48,7 +55,12 @@ const projectRoute = createRoute({
   component: ProjectRoute
 });
 
-const routeTree = rootRoute.addChildren([dashboardRoute, loginRoute, projectRoute]);
+const routeTree = rootRoute.addChildren([
+  dashboardRoute,
+  loginRoute,
+  projectRoute,
+  settingsRoute
+]);
 
 export const router = createRouter({ routeTree });
 

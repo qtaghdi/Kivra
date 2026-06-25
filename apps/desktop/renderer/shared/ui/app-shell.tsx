@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Box, Database, LogOut, User } from "lucide-react";
+import { Box, Database, LogOut, Settings, User } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -50,10 +50,11 @@ export const AppShell = ({ children }: appShellProps) => {
         </nav>
         <div className="border-t p-2">
           <div className="flex items-center gap-2">
-            <button
-              type="button"
+            <Link
+              to="/settings"
               className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-2 text-left transition hover:bg-muted"
               title={authUser.data?.username ?? t("auth.profile")}
+              activeProps={{ className: "bg-muted" }}
             >
               {authUser.data?.avatarUrl ? (
                 <img
@@ -70,8 +71,12 @@ export const AppShell = ({ children }: appShellProps) => {
                 <span className="block truncate text-sm font-medium">
                   {authUser.data?.username ?? t("auth.profile")}
                 </span>
+                <span className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                  <Settings className="h-3 w-3" />
+                  {t("nav.settings")}
+                </span>
               </span>
-            </button>
+            </Link>
             <Button
               type="button"
               size="icon"

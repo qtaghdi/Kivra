@@ -11,7 +11,8 @@ export const resources = {
         dashboard: "Dashboard",
         login: "GitHub Login",
         currentProject: "Current Project",
-        openProjectFirst: "Open a project first"
+        openProjectFirst: "Open a project first",
+        settings: "Settings"
       },
       runtime: {
         desktopRequired: "Native actions require the desktop app.",
@@ -160,6 +161,46 @@ export const resources = {
         emptyDetail: "Save a resolution note from the Errors tab. It will become searchable here.",
         projectWide: "project-wide",
         unknownError: "Unknown error"
+      },
+      settings: {
+        title: "Settings",
+        description: "Install local capture integrations and manage how Kivra receives logs from tools outside the app.",
+        installed: "Installed",
+        partiallyInstalled: "Partially installed",
+        notInstalled: "Not installed",
+        installing: "Installing...",
+        errorFallback: "The action failed, but no detailed error was returned.",
+        shell: {
+          title: "zsh shell capture",
+          description: "Capture stdout and stderr from registered projects when commands run in Terminal, iTerm, or an IDE terminal.",
+          install: "Install shell capture",
+          reinstall: "Reinstall shell capture",
+          uninstall: "Remove shell capture",
+          installSuccess: "Shell capture installed. Open a new terminal to activate it.",
+          uninstallSuccess: "Shell capture removed. Open a new terminal to finish deactivating it.",
+          permissionTitle: "Administrator permission",
+          permissionDetail: "Kivra will ask macOS for administrator permission, install the shell helper under your home directory, update .zshrc, then restore file ownership to your user. Open a new terminal after installation."
+        },
+        jetbrains: {
+          title: "JetBrains Run/Debug plugin",
+          description: "Capture Run and Debug console output from IntelliJ IDEA, WebStorm, PyCharm, GoLand, Android Studio, and other JetBrains IDEs.",
+          ready: "Ready",
+          needsAttention: "Needs attention",
+          notLinked: "Not linked",
+          linked: "Linked",
+          missing: "Missing",
+          emptyDetected: "No JetBrains IDE or Android Studio settings folders were detected.",
+          install: "Install JetBrains plugin",
+          reinstall: "Reinstall JetBrains plugin",
+          installMissing: "Install missing IDEs only",
+          installSuccess: "JetBrains plugin installed. Restart your JetBrains IDE to load it.",
+          installMissingSuccess: "JetBrains plugin installed into missing IDEs. Restart those IDEs to load it.",
+          noMissingSuccess: "All detected JetBrains IDEs already have the plugin installed.",
+          installedPaths: "Installed",
+          missingPaths: "Missing",
+          restartTitle: "IDE restart required",
+          restartDetail: "Kivra installs the plugin into detected JetBrains IDE plugin folders. Restart the IDE after installation so Run/Debug capture can load."
+        }
       }
     }
   },
@@ -172,7 +213,8 @@ export const resources = {
         dashboard: "대시보드",
         login: "GitHub 로그인",
         currentProject: "현재 프로젝트",
-        openProjectFirst: "먼저 프로젝트를 열어주세요"
+        openProjectFirst: "먼저 프로젝트를 열어주세요",
+        settings: "설정"
       },
       runtime: {
         desktopRequired: "네이티브 기능은 데스크톱 앱에서만 동작합니다.",
@@ -321,6 +363,46 @@ export const resources = {
         emptyDetail: "에러 탭에서 해결 노트를 저장하면 여기에서 검색할 수 있습니다.",
         projectWide: "프로젝트 전체",
         unknownError: "알 수 없는 에러"
+      },
+      settings: {
+        title: "설정",
+        description: "앱 밖에서 실행되는 도구의 로그를 Kivra가 받을 수 있도록 로컬 캡처 연동을 설치합니다.",
+        installed: "설치됨",
+        partiallyInstalled: "일부 설치됨",
+        notInstalled: "설치 안 됨",
+        installing: "설치 중...",
+        errorFallback: "작업이 실패했지만 자세한 오류 메시지가 반환되지 않았습니다.",
+        shell: {
+          title: "zsh 쉘 캡처",
+          description: "Terminal, iTerm, IDE 터미널에서 등록된 프로젝트 명령이 실행될 때 stdout과 stderr를 캡처합니다.",
+          install: "쉘 캡처 설치",
+          reinstall: "쉘 캡처 재설치",
+          uninstall: "쉘 캡처 삭제",
+          installSuccess: "쉘 캡처가 설치되었습니다. 새 터미널을 열면 적용됩니다.",
+          uninstallSuccess: "쉘 캡처가 삭제되었습니다. 새 터미널을 열면 비활성화가 완료됩니다.",
+          permissionTitle: "관리자 권한 요청",
+          permissionDetail: "Kivra가 macOS 관리자 권한을 요청한 뒤 홈 디렉터리에 쉘 헬퍼를 설치하고 .zshrc를 갱신합니다. 설치 후 파일 소유권은 다시 현재 사용자로 맞추며, 새 터미널을 열어야 적용됩니다."
+        },
+        jetbrains: {
+          title: "JetBrains Run/Debug 플러그인",
+          description: "IntelliJ IDEA, WebStorm, PyCharm, GoLand, Android Studio 등 JetBrains IDE의 Run/Debug 콘솔 출력을 캡처합니다.",
+          ready: "준비됨",
+          needsAttention: "확인 필요",
+          notLinked: "미연동",
+          linked: "연동됨",
+          missing: "누락",
+          emptyDetected: "JetBrains IDE 또는 Android Studio 설정 폴더를 찾지 못했습니다.",
+          install: "JetBrains 플러그인 설치",
+          reinstall: "JetBrains 플러그인 재설치",
+          installMissing: "누락된 IDE에만 설치",
+          installSuccess: "JetBrains 플러그인이 설치되었습니다. IDE를 재시작하면 적용됩니다.",
+          installMissingSuccess: "누락된 IDE에 JetBrains 플러그인을 설치했습니다. 해당 IDE를 재시작하면 적용됩니다.",
+          noMissingSuccess: "감지된 모든 JetBrains IDE에 이미 플러그인이 설치되어 있습니다.",
+          installedPaths: "설치됨",
+          missingPaths: "누락됨",
+          restartTitle: "IDE 재시작 필요",
+          restartDetail: "Kivra가 감지된 JetBrains IDE 플러그인 폴더에 플러그인을 설치합니다. 적용하려면 IDE를 재시작하세요."
+        }
       }
     }
   }
