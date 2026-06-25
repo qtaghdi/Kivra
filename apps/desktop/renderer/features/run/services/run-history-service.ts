@@ -88,3 +88,29 @@ export const saveProjectRun = (
 
   return nextRuns;
 };
+
+export function saveProjectRuns(projectId: string, nextRuns: runResult[]): runResult[] {
+  const runMap = new Map<string, runResult>();
+
+  for (const run of getStoredRuns(projectId)) {
+    const normalizedRun = normalizeRun(run);
+    runMap.set(normalizedRun.id, normalizedRun);
+  }
+
+  for (const run of nextRuns) {
+    const normalizedRun = normalizeRun({ ...run, projectId });
+    runMap.set(normalizedRun.id, normalizedRun);
+  }
+
+  const runs = Array.from(runMap.values())
+    .sort(
+      (firstRun, secondRun) =>
+        new Date(secondRun.createdAt).getTime() -
+        new Date(firstRun.createdAt).getTime()
+    )
+    .slice(0, 200);
+
+  writeStoredRuns(projectId, runs);
+
+  return runs;
+}

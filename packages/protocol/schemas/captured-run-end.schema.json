@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kivra.ai/schemas/captured-run-end.schema.json",
+  "title": "Kivra Captured Run End",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "type",
+    "protocolVersion",
+    "finishedAt",
+    "exitCode",
+    "durationMs"
+  ],
+  "properties": {
+    "type": {
+      "const": "end"
+    },
+    "protocolVersion": {
+      "const": 1
+    },
+    "finishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "exitCode": {
+      "type": ["integer", "null"]
+    },
+    "durationMs": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

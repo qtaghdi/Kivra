@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kivra.ai/schemas/captured-run-event.schema.json",
+  "title": "Kivra Captured Run Event",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "type",
+    "protocolVersion",
+    "time",
+    "pid",
+    "ppid",
+    "execname",
+    "stream",
+    "data"
+  ],
+  "properties": {
+    "type": {
+      "const": "output"
+    },
+    "protocolVersion": {
+      "const": 1
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "pid": {
+      "type": ["integer", "null"]
+    },
+    "ppid": {
+      "type": ["integer", "null"]
+    },
+    "execname": {
+      "type": ["string", "null"]
+    },
+    "stream": {
+      "enum": ["stdout", "stderr"]
+    },
+    "data": {
+      "type": "string"
+    }
+  }
+}

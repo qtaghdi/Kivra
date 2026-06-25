@@ -8,7 +8,17 @@
     "build": "pnpm --filter @kivra/desktop build",
     "preview": "pnpm --filter @kivra/desktop preview",
     "desktop:tauri:dev": "pnpm --filter @kivra/desktop tauri:dev",
-    "desktop:tauri:build": "pnpm --filter @kivra/desktop tauri:build"
+    "desktop:tauri:build": "pnpm --filter @kivra/desktop tauri:build",
+    "jetbrains:build": "cd plugins/jetbrains && ./gradlew buildPlugin",
+    "jetbrains:test": "cd plugins/jetbrains && ./gradlew test",
+    "jetbrains:run-ide": "cd plugins/jetbrains && ./gradlew runIde",
+    "vscode:build": "pnpm --filter kivra-vscode build",
+    "vscode:check": "pnpm --filter kivra-vscode check",
+    "vscode:test": "pnpm --filter kivra-vscode test",
+    "vscode:package": "pnpm --filter kivra-vscode package",
+    "protocol:check": "node tools/validate-protocol-fixtures.mjs",
+    "trace:diagnose": "node tools/trace-diagnose.mjs",
+    "trace:install-shell": "node tools/install-shell-capture.mjs"
   },
   "packageManager": "pnpm@11.9.0"
 }

@@ -117,16 +117,29 @@ apps
 │  └─ native
 │     └─ src
 │
+plugins
+├─ jetbrains
+│  └─ src
+│
 packages
 ├─ shared
 ├─ database
-└─ config
+├─ config
+└─ protocol
 
 Do not use apps/desktop/ui.
 
 The React application belongs in apps/desktop/renderer.
 
 The Rust native application belongs in apps/desktop/native.
+
+IDE integrations belong in plugins/.
+
+Shared app-plugin contracts belong in packages/protocol.
+
+The captured-run protocol is language-neutral. TypeScript code may import
+@kivra/protocol, while Kotlin plugins must follow the JSON Schemas and fixtures
+published by packages/protocol.
 
 ⸻
 

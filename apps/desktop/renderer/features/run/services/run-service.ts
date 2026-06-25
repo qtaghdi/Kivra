@@ -10,6 +10,15 @@ type nativeRunResult = Omit<runResult, "id" | "projectId" | "errors"> & {
   >;
 };
 
+type nativeCapturedRunResult = Omit<runResult, "projectId" | "errors"> & {
+  errors: Array<
+    Omit<
+      runResult["errors"][number],
+      "createdAt" | "id" | "projectId" | "runId"
+    >
+  >;
+};
+
 export const runProjectCommand = async (args: {
   projectId: string;
   projectPath: string;
@@ -33,4 +42,29 @@ export const runProjectCommand = async (args: {
       createdAt: run.createdAt
     }))
   };
+};
+
+export const readCapturedRuns = async (args: {
+  projectId: string;
+  projectPath: string;
+}): Promise<runResult[]> => {
+  const capturedRuns = await invokeCommand<nativeCapturedRunResult[]>(
+    "read_captured_runs",
+    {
+      projectPath: args.projectPath
+    }
+  );
+
+  return capturedRuns.map((run) => ({
+    ...run,
+    id: `captured:${run.id}`,
+    projectId: args.projectId,
+    errors: run.errors.map((error) => ({
+      ...error,
+      id: crypto.randomUUID(),
+      projectId: args.projectId,
+      runId: `captured:${run.id}`,
+      createdAt: run.createdAt
+    }))
+  }));
 };

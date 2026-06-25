@@ -1,0 +1,2 @@
+{"type":"output","protocolVersion":1,"time":"2026-06-25T00:00:00.100Z","pid":null,"ppid":null,"execname":null,"stream":"stdout","data":"building\n"}
+{"type":"output","protocolVersion":1,"time":"2026-06-25T00:00:00.200Z","pid":null,"ppid":null,"execname":null,"stream":"stderr","data":"warning: example\n"}

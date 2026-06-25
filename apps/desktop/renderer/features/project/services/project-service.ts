@@ -36,6 +36,42 @@ const scanProject = async (projectPath: string): Promise<scannedProject> => {
   return result.data;
 };
 
+const syncTraceProjectList = async (projects: project[]) => {
+  const localProjectPaths = projects
+    .filter((project) => project.source === "local")
+    .map((project) => project.path);
+
+  if (localProjectPaths.length === 0) {
+    return;
+  }
+
+  try {
+    await invokeCommand("sync_trace_projects", {
+      projectPaths: localProjectPaths
+    });
+  } catch {
+    // External capture is best-effort. The app still works without it.
+  }
+};
+
+const startExternalLogCapture = async (projects: project[]) => {
+  const localProjectPaths = projects
+    .filter((project) => project.source === "local")
+    .map((project) => project.path);
+
+  if (localProjectPaths.length === 0) {
+    return;
+  }
+
+  try {
+    await invokeCommand<void>("start_trace_agent", {
+      projectPaths: localProjectPaths
+    });
+  } catch {
+    // Shell and IDE capture are best-effort. The app still works without them.
+  }
+};
+
 export const registerProject = async (projectPath: string): Promise<project> => {
   const scannedProject = await scanProject(projectPath);
   const projects = readStoredProjects();
@@ -52,6 +88,7 @@ export const registerProject = async (projectPath: string): Promise<project> => 
   ];
 
   writeStoredProjects(nextProjects);
+  void startExternalLogCapture(nextProjects);
   void syncProject(nextProject);
 
   return nextProject;
@@ -103,6 +140,7 @@ export const connectGithubProjectToLocalFolder = async (args: {
   writeStoredProjects(
     projects.map((item) => (item.id === nextProject.id ? nextProject : item))
   );
+  void startExternalLogCapture([nextProject]);
   void syncProject(nextProject);
 
   return nextProject;
@@ -153,6 +191,8 @@ export const getProjects = async (): Promise<project[]> => {
     writeStoredProjects(projects);
   }
 
+  void syncTraceProjectList(projects);
+
   return projects;
 };
 
@@ -168,6 +208,10 @@ export const deleteProject = async (projectId: string): Promise<string> => {
 
 export const getProject = async (projectId: string): Promise<project | null> => {
   const project = (await getProjects()).find((item) => item.id === projectId) ?? null;
+
+  if (project?.source === "local") {
+    void startExternalLogCapture([project]);
+  }
 
   if (!project || project.source !== "github" || project.tree.children?.length) {
     return project;

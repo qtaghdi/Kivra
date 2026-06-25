@@ -47,15 +47,13 @@ export const RunHistoryTable = ({
         <tbody>
           {runs.map((run, index) => (
             <motion.tr
-              key={`${run.createdAt}-${run.command}`}
+              key={run.id}
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.18, delay: index * 0.025, ease: "easeOut" }}
               className={cn(
                 "h-10 cursor-pointer border-t transition hover:bg-muted",
-                selectedRun?.createdAt === run.createdAt &&
-                  selectedRun.command === run.command &&
-                  "bg-muted"
+                selectedRun?.id === run.id && "bg-muted"
               )}
               onClick={() => onSelectRun(run)}
             >

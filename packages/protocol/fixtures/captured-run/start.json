@@ -1,0 +1,9 @@
+{
+  "type": "start",
+  "protocolVersion": 1,
+  "id": "1710000000000-example",
+  "projectPath": "/Users/example/work/kivra-project",
+  "command": "pnpm build",
+  "startedAt": "2026-06-25T00:00:00.000Z",
+  "captureMode": "jetbrains"
+}

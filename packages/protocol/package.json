@@ -1,0 +1,13 @@
+{
+  "name": "@kivra/protocol",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./capture": "./src/capture.ts",
+    "./schemas/captured-run-start": "./schemas/captured-run-start.schema.json",
+    "./schemas/captured-run-event": "./schemas/captured-run-event.schema.json",
+    "./schemas/captured-run-end": "./schemas/captured-run-end.schema.json"
+  }
+}

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Box, FolderOpen, LogOut, RefreshCw, User, X } from "lucide-react";
+import { Box, FolderOpen, LogOut, RefreshCw, Settings, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -64,6 +64,14 @@ export const AppShell = ({ children }: appShellProps) => {
               {selectedProject?.name ?? t("nav.selectProject")}
             </span>
           </NavProjectLink>
+          <Link
+            to="/settings"
+            className="group relative flex h-8 items-center gap-2 rounded-md px-2 text-sm transition hover:bg-muted"
+            activeProps={{ className: "bg-muted font-medium" }}
+          >
+            <Settings className="h-4 w-4" />
+            {t("nav.settings")}
+          </Link>
         </nav>
         <div className="border-t p-2">
           <div className="flex items-center gap-2">

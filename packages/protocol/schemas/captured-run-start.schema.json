@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kivra.ai/schemas/captured-run-start.schema.json",
+  "title": "Kivra Captured Run Start",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "type",
+    "protocolVersion",
+    "id",
+    "projectPath",
+    "command",
+    "startedAt",
+    "captureMode"
+  ],
+  "properties": {
+    "type": {
+      "const": "start"
+    },
+    "protocolVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "projectPath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "command": {
+      "type": "string"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "captureMode": {
+      "enum": ["shell", "jetbrains", "vscode"]
+    }
+  }
+}
