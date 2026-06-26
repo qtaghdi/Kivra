@@ -123,6 +123,11 @@ export const SettingsRoute = () => {
           error={shellError}
           errorFallback={t("settings.errorFallback")}
         >
+          <ScopeNote
+            title={t("settings.shell.scopeTitle")}
+            captures={t("settings.shell.scopeCaptures")}
+            excludes={t("settings.shell.scopeExcludes")}
+          />
           <div className="rounded-md border bg-muted/45 p-3 text-xs leading-5 text-muted-foreground">
             <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
               <ShieldCheck className="h-4 w-4" />
@@ -163,6 +168,11 @@ export const SettingsRoute = () => {
           error={jetBrainsError}
           errorFallback={t("settings.errorFallback")}
         >
+          <ScopeNote
+            title={t("settings.jetbrains.scopeTitle")}
+            captures={t("settings.jetbrains.scopeCaptures")}
+            excludes={t("settings.jetbrains.scopeExcludes")}
+          />
           <div className="rounded-md border bg-muted/45 p-3 text-xs leading-5 text-muted-foreground">
             <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
               <RefreshCw className="h-4 w-4" />
@@ -204,6 +214,11 @@ export const SettingsRoute = () => {
           error={vscodeError}
           errorFallback={t("settings.errorFallback")}
         >
+          <ScopeNote
+            title={t("settings.vscode.scopeTitle")}
+            captures={t("settings.vscode.scopeCaptures")}
+            excludes={t("settings.vscode.scopeExcludes")}
+          />
           <div className="rounded-md border bg-muted/45 p-3 text-xs leading-5 text-muted-foreground">
             <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
               <RefreshCw className="h-4 w-4" />
@@ -307,6 +322,26 @@ const IntegrationCard = ({
       </div>
     </div>
   </article>
+);
+
+const ScopeNote = ({
+  captures,
+  excludes,
+  title
+}: {
+  captures: string;
+  excludes: string;
+  title: string;
+}) => (
+  <div className="rounded-md border bg-background p-3 text-xs leading-5">
+    <div className="font-medium text-foreground">{title}</div>
+    <div className="mt-2 text-muted-foreground">
+      <span className="text-foreground">Captures:</span> {captures}
+    </div>
+    <div className="mt-1 text-muted-foreground">
+      <span className="text-foreground">Not this:</span> {excludes}
+    </div>
+  </div>
 );
 
 const JetBrainsPluginList = ({

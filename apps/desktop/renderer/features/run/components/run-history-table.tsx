@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { Clock3, TerminalSquare, Timer } from "lucide-react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
 import type { runResult } from "@/features/run/types/run";
@@ -33,50 +35,89 @@ export const RunHistoryTable = ({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: "easeOut" }}
-      className="overflow-hidden rounded-md border bg-card"
+      className="flex h-full min-h-0 flex-col overflow-hidden rounded-md border bg-card"
     >
-      <div className="max-h-[min(320px,34vh)] overflow-auto">
-        <table className="w-full table-fixed border-collapse text-left text-sm">
-          <thead className="sticky top-0 z-10 bg-muted text-xs uppercase text-muted-foreground shadow-[0_1px_0_hsl(var(--border))]">
-            <tr>
-              <th className="w-[48%] px-3 py-2 font-medium">{t("runs.command")}</th>
-              <th className="w-[16%] px-3 py-2 font-medium">{t("runs.status")}</th>
-              <th className="w-[16%] px-3 py-2 font-medium">{t("runs.duration")}</th>
-              <th className="w-[20%] px-3 py-2 font-medium">{t("runs.timestamp")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {runs.map((run, index) => (
-              <motion.tr
-                key={run.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{
-                  duration: 0.18,
-                  delay: Math.min(index * 0.025, 0.18),
-                  ease: "easeOut"
-                }}
-                className={cn(
-                  "h-10 cursor-pointer border-t transition hover:bg-muted",
-                  selectedRun?.id === run.id && "bg-muted"
-                )}
-                onClick={() => onSelectRun(run)}
-              >
-                <td className="px-3 py-2">
-                  <div className="truncate font-mono text-xs" title={run.command}>
+      <div className="border-b px-3 py-3">
+        <div className="text-sm font-medium">{t("runs.history")}</div>
+        <div className="mt-1 text-xs text-muted-foreground">
+          {t("runs.historyCount", { count: runs.length })}
+        </div>
+      </div>
+      <div className="min-h-0 flex-1 overflow-auto p-2">
+        <div className="grid gap-2">
+          {runs.map((run, index) => (
+            <motion.button
+              key={run.id}
+              type="button"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.18,
+                delay: Math.min(index * 0.025, 0.18),
+                ease: "easeOut"
+              }}
+              className={cn(
+                "rounded-md border bg-background p-3 text-left transition hover:border-foreground/20 hover:bg-muted",
+                selectedRun?.id === run.id && "border-foreground/20 bg-muted"
+              )}
+              onClick={() => onSelectRun(run)}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div
+                    className="truncate font-mono text-xs"
+                    title={run.command}
+                  >
                     {run.command}
                   </div>
-                </td>
-                <td className="px-3 py-2">{run.status}</td>
-                <td className="px-3 py-2">{run.duration} ms</td>
-                <td className="truncate px-3 py-2">
-                  {new Date(run.createdAt).toLocaleString()}
-                </td>
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <RunMetaChip
+                      icon={<TerminalSquare className="h-3.5 w-3.5" />}
+                      value={run.status}
+                      tone={run.status === "FAILED" ? "danger" : "default"}
+                    />
+                    <RunMetaChip
+                      icon={<Timer className="h-3.5 w-3.5" />}
+                      value={`${run.duration} ms`}
+                    />
+                    <RunMetaChip
+                      icon={<Clock3 className="h-3.5 w-3.5" />}
+                      value={new Date(run.createdAt).toLocaleTimeString()}
+                    />
+                  </div>
+                </div>
+                {run.errors.length > 0 && (
+                  <span className="rounded-md border border-destructive/30 bg-destructive/10 px-2 py-1 text-[11px] font-medium text-destructive">
+                    {t("runs.errorCount", { count: run.errors.length })}
+                  </span>
+                )}
+              </div>
+            </motion.button>
+          ))}
+        </div>
       </div>
     </motion.div>
   );
 };
+
+const RunMetaChip = ({
+  icon,
+  tone = "default",
+  value
+}: {
+  icon: ReactNode;
+  tone?: "default" | "danger";
+  value: string;
+}) => (
+  <span
+    className={cn(
+      "inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px]",
+      tone === "danger"
+        ? "border-destructive/30 bg-destructive/10 text-destructive"
+        : "border-border bg-card text-muted-foreground"
+    )}
+  >
+    {icon}
+    {value}
+  </span>
+);

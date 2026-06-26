@@ -29,6 +29,7 @@ import type { runResult } from "@/features/run";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Select, type selectOption } from "@/shared/ui/select";
+import { Skeleton } from "@/shared/ui/skeleton";
 
 type projectTab = "explorer" | "runs" | "errors" | "knowledge" | "settings";
 
@@ -49,6 +50,7 @@ export const ProjectRoute = () => {
     projectId,
     project.data?.source === "local" ? project.data.path : null
   );
+  const [liveRun, setLiveRun] = useState<runResult | null>(null);
   const [selectedRun, setSelectedRun] = useState<runResult | null>(null);
   const [selectedFilePath, setSelectedFilePath] = useState<string | null>(null);
   const [selectedError, setSelectedError] = useState<detectedError | null>(null);
@@ -67,6 +69,14 @@ export const ProjectRoute = () => {
     projectId
   });
 
+  const visibleRuns = useMemo(
+    () =>
+      liveRun
+        ? [liveRun, ...runs.filter((run) => run.id !== liveRun.id)]
+        : runs,
+    [liveRun, runs]
+  );
+
   useEffect(() => {
     setSelectedProjectId(projectId);
   }, [projectId, setSelectedProjectId]);
@@ -74,12 +84,16 @@ export const ProjectRoute = () => {
   useEffect(() => {
     setSelectedRun((currentRun) => {
       if (!currentRun) {
-        return runs[0] ?? null;
+        return visibleRuns[0] ?? null;
       }
 
-      return runs.find((run) => run.id === currentRun.id) ?? runs[0] ?? null;
+      return (
+        visibleRuns.find((run) => run.id === currentRun.id) ??
+        visibleRuns[0] ??
+        null
+      );
     });
-  }, [runs]);
+  }, [visibleRuns]);
 
   useEffect(() => {
     setSelectedError(errors[0] ?? null);
@@ -135,7 +149,7 @@ export const ProjectRoute = () => {
   };
 
   if (project.isLoading) {
-    return <div className="p-6 text-sm text-muted-foreground">{t("project.loading")}</div>;
+    return <ProjectRouteSkeleton />;
   }
 
   if (!project.data) {
@@ -207,7 +221,18 @@ export const ProjectRoute = () => {
             <CommandRunner
               projectId={projectData.id}
               projectPath={projectData.path}
+              onRunUpdate={(result) => {
+                setLiveRun(result);
+                setSelectedRun((currentRun) =>
+                  !currentRun || currentRun.id === result.id ? result : currentRun
+                );
+                void navigate({ search: { tab: "runs" } });
+              }}
+              onRunError={() => {
+                setLiveRun(null);
+              }}
               onRunComplete={(result) => {
+                setLiveRun(null);
                 addRun(result);
                 setSelectedRun(result);
                 void navigate({ search: { tab: "runs" } });
@@ -309,9 +334,9 @@ export const ProjectRoute = () => {
               </div>
             )}
             {activeTab === "runs" && (
-              <div className="grid gap-4">
+              <div className="grid h-full min-h-0 gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
                 <RunHistoryTable
-                  runs={runs}
+                  runs={visibleRuns}
                   selectedRun={selectedRun}
                   onSelectRun={setSelectedRun}
                 />
@@ -385,6 +410,47 @@ export const ProjectRoute = () => {
     </motion.div>
   );
 };
+
+const ProjectRouteSkeleton = () => (
+  <div className="flex h-screen flex-col overflow-hidden">
+    <div className="border-b bg-card px-4 py-3">
+      <Skeleton className="h-6 w-48" />
+      <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+      <div className="mt-4 grid grid-cols-5 gap-2">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className="rounded-md border bg-background p-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="mt-2 h-4 w-20" />
+          </div>
+        ))}
+      </div>
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <div className="flex gap-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <Skeleton key={index} className="h-7 w-16" />
+          ))}
+        </div>
+        <Skeleton className="h-9 w-28" />
+      </div>
+    </div>
+    <div className="grid min-h-0 flex-1 grid-cols-[320px_1fr] gap-4 p-4">
+      <div className="rounded-md border bg-card p-3">
+        {Array.from({ length: 10 }).map((_, index) => (
+          <Skeleton key={index} className="mb-2 h-7 w-full last:mb-0" />
+        ))}
+      </div>
+      <div className="rounded-md border bg-card p-3">
+        <Skeleton className="h-5 w-56" />
+        <Skeleton className="mt-2 h-4 w-32" />
+        <div className="mt-4 space-y-2">
+          {Array.from({ length: 14 }).map((_, index) => (
+            <Skeleton key={index} className="h-4 w-full" />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
 
 type metadataProps = {
   label: string;

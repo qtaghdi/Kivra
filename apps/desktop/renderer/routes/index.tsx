@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
-import { Activity, AlertTriangle, FolderKanban } from "lucide-react";
+import { Activity, AlertTriangle, FolderKanban, Search } from "lucide-react";
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -11,10 +11,12 @@ import {
   useProjects
 } from "@/features/project";
 import { useRunMetrics } from "@/features/run";
+import { Skeleton } from "@/shared/ui/skeleton";
 
 export const DashboardRoute = () => {
   const { t } = useTranslation();
   const projects = useProjects();
+  const [projectQuery, setProjectQuery] = useState("");
   const importedRepositoryUrls = useMemo(
     () =>
       new Set(
@@ -24,6 +26,27 @@ export const DashboardRoute = () => {
       ),
     [projects.data]
   );
+  const filteredProjects = useMemo(() => {
+    const normalizedQuery = projectQuery.trim().toLowerCase();
+
+    if (!normalizedQuery) {
+      return projects.data ?? [];
+    }
+
+    return (projects.data ?? []).filter((project) =>
+      [
+        project.name,
+        project.path,
+        project.framework,
+        project.runtime,
+        project.packageManager,
+        project.branch
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery)
+    );
+  }, [projectQuery, projects.data]);
   const projectIds = projects.data?.map((project) => project.id) ?? [];
   const runMetrics = useRunMetrics(projectIds);
 
@@ -54,27 +77,63 @@ export const DashboardRoute = () => {
             <FolderKanban className="h-4 w-4" />
             {t("dashboard.projects")}
           </div>
-          <div className="mt-1 text-lg font-semibold">
-            {projects.data?.length ?? 0}
-          </div>
+          {projects.isLoading ? (
+            <Skeleton className="mt-2 h-7 w-14" />
+          ) : (
+            <div className="mt-1 text-lg font-semibold">
+              {projects.data?.length ?? 0}
+            </div>
+          )}
         </MetricPanel>
         <MetricPanel>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Activity className="h-4 w-4" />
             {t("dashboard.runsToday")}
           </div>
-          <div className="mt-1 text-lg font-semibold">{runMetrics.runsToday}</div>
+          {projects.isLoading ? (
+            <Skeleton className="mt-2 h-7 w-16" />
+          ) : (
+            <div className="mt-1 text-lg font-semibold">{runMetrics.runsToday}</div>
+          )}
         </MetricPanel>
         <MetricPanel>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <AlertTriangle className="h-4 w-4" />
             {t("dashboard.openErrors")}
           </div>
-          <div className="mt-1 text-lg font-semibold">{runMetrics.openErrors}</div>
+          {projects.isLoading ? (
+            <Skeleton className="mt-2 h-7 w-16" />
+          ) : (
+            <div className="mt-1 text-lg font-semibold">{runMetrics.openErrors}</div>
+          )}
         </MetricPanel>
       </section>
 
-      <ProjectTable projects={projects.data ?? []} />
+      <section className="space-y-3">
+        <div className="flex h-9 items-center gap-2 rounded-md border bg-card px-3">
+          <Search className="h-4 w-4 text-muted-foreground" />
+          <input
+            value={projectQuery}
+            onChange={(event) => setProjectQuery(event.target.value)}
+            placeholder={t("dashboard.projectSearchPlaceholder")}
+            className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none"
+          />
+          {!projects.isLoading && (
+            <span className="font-mono text-xs text-muted-foreground">
+              {filteredProjects.length}/{projects.data?.length ?? 0}
+            </span>
+          )}
+        </div>
+        <ProjectTable
+          projects={filteredProjects}
+          isLoading={projects.isLoading}
+          emptyMessage={
+            projectQuery.trim()
+              ? t("dashboard.projectSearchEmpty")
+              : undefined
+          }
+        />
+      </section>
     </motion.div>
   );
 };
