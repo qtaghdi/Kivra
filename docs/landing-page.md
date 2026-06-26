@@ -282,9 +282,9 @@ Tagline
 
 GitHub
 
-License
+AGPL-3.0 License
 
-Copyright
+Copyright 2026 Sangmin Park
 
 ⸻
 

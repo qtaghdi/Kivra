@@ -108,3 +108,9 @@ pnpm jetbrains:build
 
 Install the ZIP from `plugins/jetbrains/build/distributions` in a JetBrains IDE.
 The plugin only captures projects already registered in Kivra.
+
+## License
+
+Kivra is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0).
+
+See the [LICENSE](LICENSE) file and [licensing notes](docs/licensing.md) for details.

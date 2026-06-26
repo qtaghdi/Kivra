@@ -3,6 +3,7 @@ name = "kivra"
 version = "0.1.0"
 description = "Desktop-first developer memory platform"
 authors = ["Kivra"]
+license = "AGPL-3.0-only"
 edition = "2021"
 
 [lib]
