@@ -798,12 +798,6 @@ fn read_captured_runs(project_path: String) -> Result<Vec<CapturedRunResult>, Ki
         .map_err(|error| KivraError::Filesystem(error.to_string()))?;
     let mut runs = Vec::new();
 
-    runs.extend(read_captured_runs_from_dir(
-        &root_path
-            .join(KIVRA_HOME_DIRECTORY)
-            .join(CAPTURED_RUNS_DIRECTORY),
-        Some(&root_path),
-    )?);
     runs.extend(read_central_captured_runs(&root_path)?);
 
     runs.sort_by(|first_run, second_run| second_run.created_at.cmp(&first_run.created_at));

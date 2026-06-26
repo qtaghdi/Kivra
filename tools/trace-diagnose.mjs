@@ -26,7 +26,6 @@ printFile("projects file", projectsFile);
 
 if (projectPath) {
   printSection("captured runs");
-  printCapturedRuns(projectPath);
   printCentralCapturedRuns(projectPath);
 }
 
@@ -56,12 +55,6 @@ function printZshrcStatus() {
 
   console.log(`zshrc: ${zshrcFile}`);
   console.log(zshrc.includes(sourceLine) ? "(source line installed)" : "(source line missing)");
-}
-
-function printCapturedRuns(projectPath) {
-  const runsPath = join(projectPath, KIVRA_HOME_DIRECTORY, CAPTURED_RUNS_DIRECTORY);
-  console.log(runsPath);
-  printRunsInPath(runsPath);
 }
 
 function printCentralCapturedRuns(projectPath) {
