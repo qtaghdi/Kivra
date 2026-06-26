@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 
 export const isTauriRuntime = () => {
   const runtimeWindow = globalThis as typeof globalThis & {
@@ -18,4 +19,15 @@ export const invokeCommand = async <TResult>(
   }
 
   return invoke<TResult>(command, args);
+};
+
+export const listenToEvent = async <TPayload>(
+  event: string,
+  onEvent: (payload: TPayload) => void
+) => {
+  if (!isTauriRuntime()) {
+    throw new Error("DESKTOP_RUNTIME_REQUIRED");
+  }
+
+  return listen<TPayload>(event, (eventPayload) => onEvent(eventPayload.payload));
 };

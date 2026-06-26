@@ -21,6 +21,10 @@ import {
 } from "@/features/project/services/project-storage";
 
 type scannedProject = Omit<project, "id" | "createdAt" | "source">;
+type scannedProjectMetadata = Pick<
+  project,
+  "name" | "runtime" | "framework" | "packageManager" | "branch" | "repositoryUrl"
+>;
 
 const scanProject = async (projectPath: string): Promise<scannedProject> => {
   const result = scannedProjectSchema.safeParse(
@@ -35,6 +39,13 @@ const scanProject = async (projectPath: string): Promise<scannedProject> => {
 
   return result.data;
 };
+
+const readProjectMetadata = async (
+  projectPath: string
+): Promise<scannedProjectMetadata> =>
+  invokeCommand<scannedProjectMetadata>("read_project_metadata", {
+    projectPath
+  });
 
 const syncTraceProjectList = async (projects: project[]) => {
   const localProjectPaths = projects
@@ -183,11 +194,32 @@ export const switchGithubProjectBranch = async (args: {
 };
 
 export const getProjects = async (): Promise<project[]> => {
-  const localProjects = readStoredProjects();
+  const storedProjects = readStoredProjects();
+  const localProjects = await Promise.all(
+    storedProjects.map(async (project) => {
+      if (project.source !== "local") {
+        return project;
+      }
+
+      try {
+        const metadata = await readProjectMetadata(project.path);
+
+        return {
+          ...project,
+          ...metadata
+        };
+      } catch {
+        return project;
+      }
+    })
+  );
   const syncedProjects = await fetchSyncedProjects();
   const projects = mergeProjects(localProjects, syncedProjects);
 
-  if (syncedProjects.length > 0) {
+  if (
+    syncedProjects.length > 0 ||
+    JSON.stringify(storedProjects) !== JSON.stringify(localProjects)
+  ) {
     writeStoredProjects(projects);
   }
 

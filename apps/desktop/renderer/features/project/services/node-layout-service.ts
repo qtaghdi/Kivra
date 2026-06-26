@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import type { Edge, Node } from "@xyflow/react";
 
 import type {
@@ -27,6 +29,7 @@ export type nodeGraphNodeData = Record<string, unknown> & {
 
 export type nodeGraphFlowNode = Node<nodeGraphNodeData> & {
   className: string;
+  style?: CSSProperties;
 };
 
 export type nodeGraphFlowEdge = Omit<Edge, "label"> & {
@@ -62,6 +65,7 @@ export const buildNodeFlow = ({
     },
     id: graph.fileNode.id,
     position: { x: 0, y: 0 },
+    style: getNodeStyle("file"),
     type: "default"
   });
 
@@ -90,6 +94,7 @@ export const buildNodeFlow = ({
       },
       id: groupId,
       position: groupPosition,
+      style: getNodeStyle("category"),
       type: "default"
     });
     edges.push(createEdge("file", groupId));
@@ -118,6 +123,7 @@ export const buildNodeFlow = ({
           x: groupPosition.x + childPosition.x,
           y: groupPosition.y + childPosition.y
         },
+        style: getNodeStyle(child.type),
         type: "default"
       });
       edges.push(createEdge(groupId, child.id));
@@ -143,6 +149,7 @@ export const buildNodeFlow = ({
           x: groupPosition.x + morePosition.x,
           y: groupPosition.y + morePosition.y
         },
+        style: getNodeStyle("more"),
         type: "default"
       });
       edges.push(createEdge(groupId, `more:${group.id}`));
@@ -184,13 +191,72 @@ const CATEGORY_POSITIONS: Record<codeNodeCategory, { x: number; y: number }> = {
   constants: { x: 245, y: 150 }
 };
 
-const CHILD_ARCS: Record<codeNodeCategory, { end: number; radius: number; start: number }> = {
-  imports: { end: -30, radius: 155, start: -150 },
-  exports: { end: 90, radius: 145, start: -80 },
-  declarations: { end: 210, radius: 150, start: -30 },
-  hooks: { end: 80, radius: 140, start: -100 },
-  functions: { end: 120, radius: 150, start: -80 },
-  constants: { end: 150, radius: 138, start: -40 }
+const CHILD_LANES: Record<
+  codeNodeCategory,
+  {
+    crossAxis: "x" | "y";
+    crossStep: number;
+    mainAxis: "x" | "y";
+    mainStep: number;
+    originX: number;
+    originY: number;
+    wrapAfter: number;
+  }
+> = {
+  imports: {
+    crossAxis: "x",
+    crossStep: 178,
+    mainAxis: "y",
+    mainStep: 66,
+    originX: -178,
+    originY: -118,
+    wrapAfter: 3
+  },
+  exports: {
+    crossAxis: "y",
+    crossStep: 70,
+    mainAxis: "x",
+    mainStep: 184,
+    originX: 176,
+    originY: -70,
+    wrapAfter: 4
+  },
+  declarations: {
+    crossAxis: "x",
+    crossStep: 178,
+    mainAxis: "y",
+    mainStep: 66,
+    originX: -178,
+    originY: 98,
+    wrapAfter: 3
+  },
+  hooks: {
+    crossAxis: "y",
+    crossStep: 70,
+    mainAxis: "x",
+    mainStep: -184,
+    originX: -176,
+    originY: -70,
+    wrapAfter: 4
+  },
+  functions: {
+    crossAxis: "y",
+    crossStep: 70,
+    mainAxis: "x",
+    mainStep: -184,
+    originX: -176,
+    originY: -70,
+    wrapAfter: 4
+  },
+  constants: {
+    crossAxis: "y",
+    crossStep: 70,
+    mainAxis: "x",
+    mainStep: 184,
+    originX: 176,
+    originY: -70,
+    wrapAfter: 4
+  }
 };
 
 const getChildPosition = ({
@@ -202,13 +268,24 @@ const getChildPosition = ({
   index: number;
   total: number;
 }) => {
-  const arc = CHILD_ARCS[groupId];
-  const progress = total <= 1 ? 0.5 : index / (total - 1);
-  const angle = degreesToRadians(arc.start + (arc.end - arc.start) * progress);
+  const lane = CHILD_LANES[groupId];
+  const laneIndex = Math.floor(index / lane.wrapAfter);
+  const itemIndex = index % lane.wrapAfter;
+  const centeredOffset = itemIndex - (Math.min(total, lane.wrapAfter) - 1) / 2;
+  const crossOffset = centeredOffset * lane.crossStep;
+  const mainOffset = laneIndex * lane.mainStep;
+  const x =
+    lane.originX +
+    (lane.mainAxis === "x" ? mainOffset : 0) +
+    (lane.crossAxis === "x" ? crossOffset : 0);
+  const y =
+    lane.originY +
+    (lane.mainAxis === "y" ? mainOffset : 0) +
+    (lane.crossAxis === "y" ? crossOffset : 0);
 
   return {
-    x: Math.cos(angle) * arc.radius,
-    y: Math.sin(angle) * arc.radius
+    x,
+    y
   };
 };
 
@@ -227,26 +304,69 @@ const getNodeClassName = (
   searchMatch: boolean
 ) => {
   const base =
-    "border font-mono text-[11px] shadow-lg shadow-black/20 transition-colors";
+    "flex items-center justify-center overflow-hidden border px-3 text-center font-mono text-[11px] shadow-lg shadow-black/20 transition-colors";
   const highlight = searchMatch ? " ring-2 ring-primary/70" : "";
 
   if (type === "file") {
-    return `${base} min-w-36 border-primary bg-primary px-4 py-3 text-primary-foreground${highlight}`;
+    return `${base} border-primary bg-primary text-primary-foreground${highlight}`;
   }
 
   if (type === "category") {
-    return `${base} min-w-32 border-teal-300/30 bg-teal-400/14 px-3 py-2 text-teal-100${highlight}`;
+    return `${base} border-teal-300/30 bg-teal-400/14 text-teal-100${highlight}`;
   }
 
   if (type === "more") {
-    return `${base} min-w-24 border-border bg-muted px-3 py-2 text-muted-foreground${highlight}`;
+    return `${base} border-border bg-muted text-muted-foreground${highlight}`;
   }
 
-  return `${base} min-w-28 border-sky-300/24 bg-sky-400/12 px-3 py-2 text-sky-100${highlight}`;
+  return `${base} border-sky-300/24 bg-sky-400/12 text-sky-100${highlight}`;
+};
+
+const getNodeStyle = (
+  type: codeNodeType | "category" | "file" | "more"
+): CSSProperties => {
+  if (type === "file") {
+    return {
+      borderRadius: 14,
+      fontSize: 12,
+      fontWeight: 600,
+      height: 56,
+      lineHeight: 1.3,
+      paddingInline: 16,
+      width: 176
+    };
+  }
+
+  if (type === "category") {
+    return {
+      borderRadius: 12,
+      fontWeight: 600,
+      height: 40,
+      lineHeight: 1.2,
+      paddingInline: 12,
+      width: 140
+    };
+  }
+
+  if (type === "more") {
+    return {
+      borderRadius: 12,
+      height: 40,
+      lineHeight: 1.2,
+      paddingInline: 12,
+      width: 104
+    };
+  }
+
+  return {
+    borderRadius: 12,
+    height: 48,
+    lineHeight: 1.2,
+    paddingInline: 12,
+    width: 152
+  };
 };
 
 const isSearchMatch = (value: string, query: string) => {
   return query.length > 0 && value.toLowerCase().includes(query);
 };
-
-const degreesToRadians = (value: number) => (value / 180) * Math.PI;

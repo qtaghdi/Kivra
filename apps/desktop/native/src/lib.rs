@@ -7,9 +7,10 @@ use std::{
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
-    process::Command,
+    process::{Command, Stdio},
     time::{Duration, Instant},
 };
+use tauri::{AppHandle, Emitter};
 use thiserror::Error;
 
 const KIVRA_HOME_DIRECTORY: &str = ".kivra";
@@ -21,6 +22,9 @@ const SHELL_STREAM_HELPER_FILE: &str = "shell-stream.mjs";
 const SHELL_INTEGRATION_FILE: &str = "zsh-integration.zsh";
 const JETBRAINS_PLUGIN_DIRECTORY: &str = "kivra-jetbrains";
 const VSCODE_EXTENSION_ID: &str = "kivra.kivra-vscode";
+const RUN_OUTPUT_EVENT: &str = "kivra://run-output";
+const RUN_COMPLETED_EVENT: &str = "kivra://run-completed";
+const RUN_FAILED_EVENT: &str = "kivra://run-failed";
 
 #[derive(Debug, Error)]
 enum KivraError {
@@ -79,6 +83,17 @@ struct ScannedProject {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
+struct ProjectMetadataResult {
+    name: String,
+    runtime: String,
+    framework: String,
+    package_manager: String,
+    branch: String,
+    repository_url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
 struct DetectedError {
     error_code: String,
     message: String,
@@ -88,7 +103,7 @@ struct DetectedError {
     column_number: Option<u32>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct RunResult {
     command: String,
@@ -99,6 +114,28 @@ struct RunResult {
     exit_code: Option<i32>,
     errors: Vec<DetectedError>,
     created_at: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct RunOutputEvent {
+    run_id: String,
+    stream: String,
+    chunk: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct RunCompletedEvent {
+    run_id: String,
+    result: RunResult,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct RunFailedEvent {
+    run_id: String,
+    message: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -254,6 +291,35 @@ fn scan_project(project_path: String) -> Result<ScannedProject, KivraError> {
 }
 
 #[tauri::command]
+fn read_project_metadata(project_path: String) -> Result<ProjectMetadataResult, KivraError> {
+    let root_path = PathBuf::from(project_path);
+
+    if !root_path.exists() {
+        return Err(KivraError::PathNotFound);
+    }
+
+    if !root_path.is_dir() {
+        return Err(KivraError::NotDirectory);
+    }
+
+    let name = root_path
+        .file_name()
+        .and_then(OsStr::to_str)
+        .unwrap_or("project")
+        .to_string();
+
+    Ok(ProjectMetadataResult {
+        name: detect_project_name(&root_path).unwrap_or(name),
+        runtime: detect_runtime(&root_path),
+        framework: detect_framework(&root_path),
+        package_manager: detect_package_manager(&root_path),
+        branch: read_git_output(&root_path, ["rev-parse", "--abbrev-ref", "HEAD"])
+            .unwrap_or_else(|| "unknown".to_string()),
+        repository_url: read_git_output(&root_path, ["config", "--get", "remote.origin.url"]),
+    })
+}
+
+#[tauri::command]
 fn read_project_directory(
     project_path: String,
     directory_path: String,
@@ -405,55 +471,7 @@ fn read_auth_callback_request(mut stream: TcpStream) -> Result<String, KivraErro
         .next()
         .and_then(|line| line.split_whitespace().nth(1))
         .ok_or_else(|| KivraError::AuthCallback("Invalid OAuth callback request".to_string()))?;
-
-    let response = concat!(
-        "HTTP/1.1 200 OK\r\n",
-        "Content-Type: text/html; charset=utf-8\r\n",
-        "Connection: close\r\n",
-        "\r\n",
-        "<!doctype html><html lang=\"en\"><head>",
-        "<meta charset=\"utf-8\">",
-        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">",
-        "<title>Kivra sign-in complete</title>",
-        "<style>",
-        ":root{color-scheme:dark}",
-        "*{box-sizing:border-box}",
-        "body{margin:0;min-height:100vh;display:grid;place-items:center;",
-        "font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;",
-        "background:radial-gradient(circle at 50% 0%,#1d2738 0,#0d1321 44%,#090d16 100%);",
-        "color:#eef4ff}",
-        "main{width:min(440px,calc(100vw - 40px));text-align:center}",
-        ".mark{width:64px;height:64px;margin:0 auto 22px;border-radius:18px;",
-        "display:grid;place-items:center;background:#d7f8d1;color:#122316;",
-        "box-shadow:0 20px 60px rgba(36,217,102,.24)}",
-        ".mark svg{width:34px;height:34px}",
-        ".eyebrow{margin:0 0 10px;color:#8ea1bd;font-size:12px;font-weight:700;",
-        "letter-spacing:.14em;text-transform:uppercase}",
-        "h1{font-size:30px;line-height:1.12;margin:0;color:#f8fbff}",
-        "p{font-size:15px;line-height:1.7;color:#aebbd0;margin:16px 0 0}",
-        ".panel{margin-top:26px;border:1px solid rgba(255,255,255,.1);",
-        "background:rgba(255,255,255,.055);border-radius:12px;padding:14px 16px;",
-        "display:flex;align-items:center;justify-content:center;gap:10px;",
-        "color:#d7e1f2;font-size:13px}",
-        ".dot{width:8px;height:8px;border-radius:999px;background:#7ef08a;",
-        "box-shadow:0 0 0 6px rgba(126,240,138,.12)}",
-        ".brand{position:fixed;left:24px;top:22px;font-size:14px;font-weight:800;",
-        "letter-spacing:.04em;color:#edf4ff}",
-        "</style></head><body><main>",
-        "<div class=\"brand\">Kivra</div>",
-        "<div class=\"mark\" aria-hidden=\"true\">",
-        "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" ",
-        "stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\">",
-        "<path d=\"M20 6 9 17l-5-5\"/></svg></div>",
-        "<p class=\"eyebrow\">GitHub connected</p>",
-        "<h1>You're signed in.</h1>",
-        "<p>Kivra has received the secure callback and is finishing sign-in ",
-        "inside the desktop app.</p>",
-        "<div class=\"panel\"><span class=\"dot\"></span>",
-        "<span>You can close this tab and return to Kivra.</span></div>",
-        "</main>",
-        "</body></html>"
-    );
+    let response = build_auth_callback_response(resolve_auth_callback_language(request_target));
 
     stream
         .write_all(response.as_bytes())
@@ -462,25 +480,188 @@ fn read_auth_callback_request(mut stream: TcpStream) -> Result<String, KivraErro
     Ok(format!("http://127.0.0.1:3000{request_target}"))
 }
 
+fn resolve_auth_callback_language(request_target: &str) -> &str {
+    let query = request_target
+        .split_once('?')
+        .map(|(_, query)| query)
+        .unwrap_or_default();
+
+    for pair in query.split('&') {
+        let Some((key, value)) = pair.split_once('=') else {
+            continue;
+        };
+
+        if key == "lang" {
+            return match value {
+                "ko" => "ko",
+                _ => "en",
+            };
+        }
+    }
+
+    "en"
+}
+
+fn build_auth_callback_response(language: &str) -> String {
+    let copy = if language == "ko" {
+        (
+            "ko",
+            "Kivra 로그인 완료",
+            "GitHub 연결 완료",
+            "로그인되었습니다.",
+            "Kivra가 보안 콜백을 받아 데스크톱 앱 안에서 로그인을 마무리하고 있습니다.",
+            "이 탭을 닫고 Kivra로 돌아가세요."
+        )
+    } else {
+        (
+            "en",
+            "Kivra sign-in complete",
+            "GitHub connected",
+            "You're signed in.",
+            "Kivra has received the secure callback and is finishing sign-in inside the desktop app.",
+            "You can close this tab and return to Kivra."
+        )
+    };
+
+    format!(
+        concat!(
+            "HTTP/1.1 200 OK\r\n",
+            "Content-Type: text/html; charset=utf-8\r\n",
+            "Connection: close\r\n",
+            "\r\n",
+            "<!doctype html><html lang=\"{}\"><head>",
+            "<meta charset=\"utf-8\">",
+            "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">",
+            "<title>{}</title>",
+            "<style>",
+            ":root{{color-scheme:dark}}",
+            "*{{box-sizing:border-box}}",
+            "body{{margin:0;min-height:100vh;display:grid;place-items:center;",
+            "font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;",
+            "background:radial-gradient(circle at 50% 0%,#1d2738 0,#0d1321 44%,#090d16 100%);",
+            "color:#eef4ff}}",
+            "main{{width:min(440px,calc(100vw - 40px));text-align:center}}",
+            ".mark{{width:64px;height:64px;margin:0 auto 22px;border-radius:18px;",
+            "display:grid;place-items:center;background:#d7f8d1;color:#122316;",
+            "box-shadow:0 20px 60px rgba(36,217,102,.24)}}",
+            ".mark svg{{width:34px;height:34px}}",
+            ".eyebrow{{margin:0 0 10px;color:#8ea1bd;font-size:12px;font-weight:700;",
+            "letter-spacing:.14em;text-transform:uppercase}}",
+            "h1{{font-size:30px;line-height:1.12;margin:0;color:#f8fbff}}",
+            "p{{font-size:15px;line-height:1.7;color:#aebbd0;margin:16px 0 0}}",
+            ".panel{{margin-top:26px;border:1px solid rgba(255,255,255,.1);",
+            "background:rgba(255,255,255,.055);border-radius:12px;padding:14px 16px;",
+            "display:flex;align-items:center;justify-content:center;gap:10px;",
+            "color:#d7e1f2;font-size:13px}}",
+            ".dot{{width:8px;height:8px;border-radius:999px;background:#7ef08a;",
+            "box-shadow:0 0 0 6px rgba(126,240,138,.12)}}",
+            ".brand{{position:fixed;left:24px;top:22px;font-size:14px;font-weight:800;",
+            "letter-spacing:.04em;color:#edf4ff}}",
+            "</style></head><body><main>",
+            "<div class=\"brand\">Kivra</div>",
+            "<div class=\"mark\" aria-hidden=\"true\">",
+            "<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" ",
+            "stroke-width=\"2.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\">",
+            "<path d=\"M20 6 9 17l-5-5\"/></svg></div>",
+            "<p class=\"eyebrow\">{}</p>",
+            "<h1>{}</h1>",
+            "<p>{}</p>",
+            "<div class=\"panel\"><span class=\"dot\"></span>",
+            "<span>{}</span></div>",
+            "</main>",
+            "</body></html>"
+        ),
+        copy.0, copy.1, copy.2, copy.3, copy.4, copy.5
+    )
+}
+
 #[tauri::command]
-fn run_project_command(project_path: String, command: String) -> Result<RunResult, KivraError> {
+fn start_run_project_command(
+    app: AppHandle,
+    created_at: String,
+    project_path: String,
+    command: String,
+    run_id: String,
+) -> Result<(), KivraError> {
+    std::thread::spawn(move || {
+        let run_result = execute_project_command(
+            app.clone(),
+            project_path,
+            command,
+            run_id.clone(),
+            created_at,
+        );
+
+        match run_result {
+            Ok(result) => {
+                let _ = app.emit(
+                    RUN_COMPLETED_EVENT,
+                    RunCompletedEvent {
+                        run_id,
+                        result,
+                    },
+                );
+            }
+            Err(error) => {
+                let _ = app.emit(
+                    RUN_FAILED_EVENT,
+                    RunFailedEvent {
+                        run_id,
+                        message: error.to_string(),
+                    },
+                );
+            }
+        }
+    });
+
+    Ok(())
+}
+
+fn execute_project_command(
+    app: AppHandle,
+    project_path: String,
+    command: String,
+    run_id: String,
+    created_at: String,
+) -> Result<RunResult, KivraError> {
     let started_at = Instant::now();
-    let output = if cfg!(target_os = "windows") {
+    let mut child = if cfg!(target_os = "windows") {
         Command::new("cmd")
             .args(["/C", &command])
             .current_dir(&project_path)
-            .output()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
     } else {
         Command::new("sh")
             .args(["-lc", &command])
             .current_dir(&project_path)
-            .output()
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
     }
     .map_err(|error| KivraError::Command(error.to_string()))?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or_else(|| KivraError::Command("Missing stdout pipe".to_string()))?;
+    let stderr = child
+        .stderr
+        .take()
+        .ok_or_else(|| KivraError::Command("Missing stderr pipe".to_string()))?;
+    let stdout_handle = spawn_output_reader(app.clone(), run_id.clone(), "stdout", stdout);
+    let stderr_handle = spawn_output_reader(app, run_id, "stderr", stderr);
+    let output = child
+        .wait()
+        .map_err(|error| KivraError::Command(error.to_string()))?;
     let duration = started_at.elapsed().as_millis();
-    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-    let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    let is_success = output.status.success();
+    let stdout = stdout_handle
+        .join()
+        .map_err(|_| KivraError::Command("stdout reader thread panicked".to_string()))??;
+    let stderr = stderr_handle
+        .join()
+        .map_err(|_| KivraError::Command("stderr reader thread panicked".to_string()))??;
+    let is_success = output.success();
     let combined_output = format!("{stdout}\n{stderr}");
     let errors = if is_success {
         Vec::new()
@@ -498,10 +679,55 @@ fn run_project_command(project_path: String, command: String) -> Result<RunResul
         duration,
         stdout,
         stderr,
-        exit_code: output.status.code(),
+        exit_code: output.code(),
         errors,
-        created_at: current_timestamp(),
+        created_at,
     })
+}
+
+fn spawn_output_reader(
+    app: AppHandle,
+    run_id: String,
+    stream: &str,
+    reader: impl Read + Send + 'static,
+) -> std::thread::JoinHandle<Result<String, KivraError>> {
+    let stream_name = stream.to_string();
+
+    std::thread::spawn(move || read_output_stream(app, run_id, stream_name, reader))
+}
+
+fn read_output_stream(
+    app: AppHandle,
+    run_id: String,
+    stream: String,
+    mut reader: impl Read,
+) -> Result<String, KivraError> {
+    let mut buffer = [0_u8; 4096];
+    let mut output = Vec::new();
+
+    loop {
+        let byte_count = reader
+            .read(&mut buffer)
+            .map_err(|error| KivraError::Command(error.to_string()))?;
+
+        if byte_count == 0 {
+            break;
+        }
+
+        let chunk = String::from_utf8_lossy(&buffer[..byte_count]).to_string();
+        output.extend_from_slice(&buffer[..byte_count]);
+        app.emit(
+            RUN_OUTPUT_EVENT,
+            RunOutputEvent {
+                run_id: run_id.clone(),
+                stream: stream.clone(),
+                chunk,
+            },
+        )
+        .map_err(|error| KivraError::Command(error.to_string()))?;
+    }
+
+    Ok(String::from_utf8_lossy(&output).to_string())
 }
 
 #[tauri::command]
@@ -1148,6 +1374,8 @@ fn detect_runtime(root_path: &Path) -> String {
 
 fn detect_framework(root_path: &Path) -> String {
     let package_json = fs::read_to_string(root_path.join("package.json")).unwrap_or_default();
+    let workspace_manifest =
+        fs::read_to_string(root_path.join("pnpm-workspace.yaml")).unwrap_or_default();
 
     if package_json.contains("\"next\"") {
         return "Next.js".to_string();
@@ -1167,7 +1395,91 @@ fn detect_framework(root_path: &Path) -> String {
         return "Tauri".to_string();
     }
 
-    "unknown".to_string()
+    if is_monorepo_root(root_path, &package_json, &workspace_manifest) {
+        let detected_frameworks = detect_workspace_frameworks(root_path);
+
+        if detected_frameworks.is_empty() {
+            return "Monorepo".to_string();
+        }
+
+        return format!(
+            "Monorepo ({})",
+            detected_frameworks.into_iter().collect::<Vec<_>>().join(" + ")
+        );
+    }
+
+    if package_json.contains("\"workspaces\"") {
+        return "Workspace".to_string();
+    }
+
+    if package_json.contains("\"typescript\"")
+        || package_json.contains("\"tsx\"")
+        || package_json.contains("\"ts-node\"")
+    {
+        return "TypeScript".to_string();
+    }
+
+    if package_json.contains("\"node\"") || root_path.join("package.json").exists() {
+        return "Node.js".to_string();
+    }
+
+    "Custom".to_string()
+}
+
+fn is_monorepo_root(root_path: &Path, package_json: &str, workspace_manifest: &str) -> bool {
+    workspace_manifest.contains("apps/*")
+        || workspace_manifest.contains("packages/*")
+        || package_json.contains("\"workspaces\"")
+        || root_path.join("apps").is_dir()
+        || root_path.join("packages").is_dir()
+}
+
+fn detect_workspace_frameworks(root_path: &Path) -> HashSet<String> {
+    let mut frameworks = HashSet::new();
+
+    for workspace_root in ["apps", "packages"] {
+        let workspace_path = root_path.join(workspace_root);
+
+        if !workspace_path.is_dir() {
+            continue;
+        }
+
+        let Ok(entries) = fs::read_dir(workspace_path) else {
+            continue;
+        };
+
+        for entry in entries.flatten() {
+            let entry_path = entry.path();
+
+            if !entry_path.is_dir() {
+                continue;
+            }
+
+            let package_json = fs::read_to_string(entry_path.join("package.json")).unwrap_or_default();
+
+            if package_json.is_empty() {
+                continue;
+            }
+
+            if package_json.contains("\"next\"") {
+                frameworks.insert("Next.js".to_string());
+            } else if package_json.contains("\"@vitejs/plugin-react\"")
+                || package_json.contains("\"vite\"")
+            {
+                frameworks.insert("Vite".to_string());
+            } else if package_json.contains("\"react\"") {
+                frameworks.insert("React".to_string());
+            }
+
+            if entry_path.join("tauri.conf.json").exists()
+                || entry_path.join("native").join("tauri.conf.json").exists()
+            {
+                frameworks.insert("Tauri".to_string());
+            }
+        }
+    }
+
+    frameworks
 }
 
 fn detect_package_manager(root_path: &Path) -> String {
@@ -1276,21 +1588,6 @@ fn looks_like_file_path(value: &str) -> bool {
         || value.ends_with(".rs")
         || value.ends_with(".py")
         || value.ends_with(".go")
-}
-
-fn current_timestamp() -> String {
-    Command::new("date")
-        .args(["-u", "+%Y-%m-%dT%H:%M:%SZ"])
-        .output()
-        .ok()
-        .and_then(|output| {
-            if output.status.success() {
-                Some(String::from_utf8_lossy(&output.stdout).trim().to_string())
-            } else {
-                None
-            }
-        })
-        .unwrap_or_else(|| "1970-01-01T00:00:00Z".to_string())
 }
 
 fn install_shell_capture_with_admin(
@@ -1921,11 +2218,12 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .invoke_handler(tauri::generate_handler![
             scan_project,
+            read_project_metadata,
             read_project_directory,
             open_external_url,
             wait_for_auth_callback,
             exchange_auth_code,
-            run_project_command,
+            start_run_project_command,
             read_project_file,
             read_captured_runs,
             sync_trace_projects,

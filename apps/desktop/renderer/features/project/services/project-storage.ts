@@ -50,5 +50,17 @@ export const mergeProjects = (
 
 export const normalizeProject = (project: project): project => ({
   ...project,
+  runtime:
+    project.source === "github" && project.runtime === "Node"
+      ? "Node.js"
+      : project.runtime,
+  framework:
+    project.source === "github" && project.framework === "GitHub"
+      ? "Repository"
+      : project.framework,
+  packageManager:
+    project.source === "github" && project.packageManager === "remote"
+      ? "unknown"
+      : project.packageManager,
   source: project.source ?? "local"
 });

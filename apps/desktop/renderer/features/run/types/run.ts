@@ -1,6 +1,6 @@
 import type { detectedError } from "@/features/error/types/error";
 
-export type runStatus = "SUCCESS" | "FAILED";
+export type runStatus = "SUCCESS" | "FAILED" | "RUNNING";
 
 export type runResult = {
   id: string;

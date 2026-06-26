@@ -11,12 +11,16 @@ import { Button } from "@/shared/ui/button";
 type commandRunnerProps = {
   projectId: string;
   projectPath: string;
+  onRunError?: () => void;
+  onRunUpdate?: (result: runResult) => void;
   onRunComplete: (result: runResult) => void;
 };
 
 export const CommandRunner = ({
   projectId,
   projectPath,
+  onRunError,
+  onRunUpdate,
   onRunComplete
 }: commandRunnerProps) => {
   const { t } = useTranslation();
@@ -32,8 +36,16 @@ export const CommandRunner = ({
     }
 
     runCommand.mutate(
-      { projectId, projectPath, command: command.trim() },
-      { onSuccess: onRunComplete }
+      {
+        projectId,
+        projectPath,
+        command: command.trim(),
+        onUpdate: onRunUpdate
+      },
+      {
+        onSuccess: onRunComplete,
+        onError: () => onRunError?.()
+      }
     );
   };
 
