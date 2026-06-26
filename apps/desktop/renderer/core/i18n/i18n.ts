@@ -245,9 +245,6 @@ export const resources = {
         shell: {
           title: "zsh shell capture",
           description: "Capture terminal commands from registered local projects when they run in Terminal, iTerm, or an IDE terminal.",
-          scopeTitle: "What this covers",
-          scopeCaptures: "Commands typed in zsh terminals, including IDE integrated terminals.",
-          scopeExcludes: "IDE Run/Debug buttons and debug consoles. Those are handled by the IDE plugins below.",
           install: "Install shell capture",
           reinstall: "Reinstall shell capture",
           uninstall: "Remove shell capture",
@@ -259,9 +256,6 @@ export const resources = {
         jetbrains: {
           title: "JetBrains Run/Debug plugin",
           description: "Capture Run and Debug console output from JetBrains IDEs when you launch configurations from the IDE UI.",
-          scopeTitle: "What this covers",
-          scopeCaptures: "Run/Debug configurations and their IDE console output in IntelliJ IDEA, WebStorm, PyCharm, GoLand, Android Studio, and similar IDEs.",
-          scopeExcludes: "Commands typed into the IDE Terminal tab. Those are handled by zsh shell capture.",
           ready: "Ready",
           needsAttention: "Needs attention",
           notLinked: "Not linked",
@@ -282,9 +276,6 @@ export const resources = {
         vscode: {
           title: "VS Code Run/Debug extension",
           description: "Capture Debug Console output from Visual Studio Code Run and Debug sessions launched from the editor UI.",
-          scopeTitle: "What this covers",
-          scopeCaptures: "Run and Debug sessions plus Debug Console output in Visual Studio Code.",
-          scopeExcludes: "Commands typed in the Integrated Terminal. Those are still handled by zsh shell capture.",
           ready: "Ready",
           notLinked: "Not linked",
           cliMissing: "CLI missing",
@@ -535,9 +526,6 @@ export const resources = {
         shell: {
           title: "zsh 쉘 캡처",
           description: "등록된 로컬 프로젝트에서 Terminal, iTerm, IDE 터미널로 실행한 명령을 캡처합니다.",
-          scopeTitle: "잡는 범위",
-          scopeCaptures: "zsh 터미널에 직접 입력한 명령과 IDE 내장 터미널 명령을 잡습니다.",
-          scopeExcludes: "IDE의 Run/Debug 버튼과 디버그 콘솔은 여기서 잡지 않습니다. 아래 IDE 플러그인이 담당합니다.",
           install: "쉘 캡처 설치",
           reinstall: "쉘 캡처 재설치",
           uninstall: "쉘 캡처 삭제",
@@ -549,9 +537,6 @@ export const resources = {
         jetbrains: {
           title: "JetBrains Run/Debug 플러그인",
           description: "JetBrains IDE UI에서 실행한 Run/Debug 구성과 해당 콘솔 출력을 캡처합니다.",
-          scopeTitle: "잡는 범위",
-          scopeCaptures: "IntelliJ IDEA, WebStorm, PyCharm, GoLand, Android Studio 등의 Run/Debug 실행과 IDE 콘솔 출력을 잡습니다.",
-          scopeExcludes: "IDE Terminal 탭에 직접 입력한 명령은 여기서 잡지 않고 zsh 쉘 캡처가 담당합니다.",
           ready: "준비됨",
           needsAttention: "확인 필요",
           notLinked: "미연동",
@@ -572,9 +557,6 @@ export const resources = {
         vscode: {
           title: "VS Code Run/Debug 확장",
           description: "VS Code UI에서 시작한 Run/Debug 세션과 Debug Console 출력을 캡처합니다.",
-          scopeTitle: "잡는 범위",
-          scopeCaptures: "Visual Studio Code의 Run and Debug 실행과 Debug Console 출력을 잡습니다.",
-          scopeExcludes: "Integrated Terminal에 직접 입력한 명령은 계속 zsh 쉘 캡처가 담당합니다.",
           ready: "준비됨",
           notLinked: "미연동",
           cliMissing: "CLI 없음",
