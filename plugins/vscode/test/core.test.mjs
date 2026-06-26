@@ -68,16 +68,17 @@ test("detects node terminal debug sessions", () => {
 });
 
 test("writes captured run protocol files", () => {
-  const root = mkdtempSync(join(tmpdir(), "kivra-vscode-writer-"));
+  const home = mkdtempSync(join(tmpdir(), "kivra-vscode-home-"));
+  const projectRoot = mkdtempSync(join(tmpdir(), "kivra-vscode-project-"));
   const originalHome = process.env.HOME;
-  process.env.HOME = root;
+  process.env.HOME = home;
 
   try {
-    const writer = CapturedRunWriter.start(root, "Debug (node:launch)");
+    const writer = CapturedRunWriter.start(projectRoot, "Debug (node:launch)");
     writer.append("stdout", "hello\u001b[0m\n");
     writer.finish(0);
 
-    const capturedRoot = join(root, ".kivra", "captured-runs");
+    const capturedRoot = join(home, ".kivra", "captured-runs");
     const projectKey = readdirSync(capturedRoot)[0];
     const runId = readdirSync(join(capturedRoot, projectKey)).find((entry) => entry !== "index.jsonl");
     assert.ok(runId);
@@ -87,6 +88,7 @@ test("writes captured run protocol files", () => {
     assert.match(indexContent, /"captureMode":"vscode"/);
     assert.match(eventsContent, /"data":"hello\\n"/);
     assert.equal(existsSync(join(capturedRoot, projectKey, runId, "end.json")), true);
+    assert.equal(existsSync(join(projectRoot, ".kivra")), false);
   } finally {
     if (originalHome === undefined) {
       delete process.env.HOME;
